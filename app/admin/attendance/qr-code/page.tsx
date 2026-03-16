@@ -47,6 +47,7 @@ const Page = () => {
 
   const [recentScans, setRecentScans] = useState<any[]>([]);
   const [loadingScans, setLoadingScans] = useState(false);
+  const [template, setTemplate] = useState("");
 
   // **Live Attendance Stats**
   const [stats, setStats] = useState<any[]>([]);
@@ -318,6 +319,22 @@ useEffect(() => {
                   </SelectContent>
                 </Select>
               </div>
+
+            {/* Template Select */ }
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Select Template</Label>
+
+              <Select onValueChange={setTemplate}>
+                <SelectTrigger className="border-indigo-200 focus:ring-indigo-400">
+                  <SelectValue placeholder="Choose Template" />
+                </SelectTrigger>
+
+                <SelectContent>
+                  <SelectItem value="classic">Classic</SelectItem>
+                  <SelectItem value="modern">Modern</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
               {/* User Select */}
               <div className="space-y-2">

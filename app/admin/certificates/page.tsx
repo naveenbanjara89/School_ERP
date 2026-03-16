@@ -1,8 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/exhaustive-deps */
 // /* eslint-disable react-hooks/rules-of-hooks */
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,181 +19,90 @@ import { Award, Plus, Eye, Edit, Trash2, Copy, Download, CreditCard, FileText, G
 import { toast } from "@/hooks/use-toast";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { usePathname } from "next/navigation";
+import { axiosInstance } from "@/apiHome/axiosInstanc";
 
 /* ================= TYPES ================= */
 
 interface Template {
   id: string;
   name: string;
-  category: "id-card" | "admit-card" | "marksheet" | "transfer" | "certificate";
-  htmlCode: string;
+  type: "ID_CARD" | "ADMIT_CARD" | "MARKSHEET" | "TRANSFER_CERTIFICATE" | "CERTIFICATE";
+  template: string;
   createdAt: string;
-  isDefault: boolean;
 }
 
-const defaultTemplates: Template[] = [
-  {
-    id: "1",
-    name: "Classic Blue ID Card",
-    category: "id-card",
-    htmlCode: `<div style="width:340px;height:520px;border-radius:16px;overflow:hidden;font-family:'Inter',sans-serif;background:linear-gradient(135deg,#1e40af 0%,#3b82f6 50%,#60a5fa 100%);color:#fff;position:relative;box-shadow:0 8px 32px rgba(30,64,175,0.3)">
-  <div style="text-align:center;padding:20px 16px 12px">
-    <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;opacity:0.85">{{school_name}}</div>
-    <div style="font-size:7px;margin-top:2px;opacity:0.7">{{school_address}}</div>
-    <div style="margin:12px auto;width:90px;height:90px;border-radius:50%;border:3px solid rgba(255,255,255,0.5);overflow:hidden;background:#fff">
-      <img src="{{photo_url}}" alt="Student" style="width:100%;height:100%;object-fit:cover" />
-    </div>
-    <div style="font-size:16px;font-weight:700;margin-top:6px">{{student_name}}</div>
-    <div style="background:rgba(255,255,255,0.2);border-radius:20px;display:inline-block;padding:3px 14px;font-size:9px;margin-top:6px">{{admission_no}}</div>
-  </div>
-  <div style="background:rgba(255,255,255,0.95);color:#1e293b;border-radius:16px 16px 0 0;padding:16px 20px;flex:1;margin-top:4px">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:10px;color:#64748b">Class</span><span style="font-size:11px;font-weight:600">{{class}} - {{section}}</span></div>
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:10px;color:#64748b">Roll No</span><span style="font-size:11px;font-weight:600">{{roll_no}}</span></div>
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:10px;color:#64748b">DOB</span><span style="font-size:11px;font-weight:600">{{dob}}</span></div>
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:10px;color:#64748b">Blood Group</span><span style="font-size:11px;font-weight:600">{{blood_group}}</span></div>
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:10px;color:#64748b">Parent</span><span style="font-size:11px;font-weight:600">{{parent_name}}</span></div>
-    <div style="display:flex;justify-content:space-between"><span style="font-size:10px;color:#64748b">Contact</span><span style="font-size:11px;font-weight:600">{{contact}}</span></div>
-    <div style="text-align:center;margin-top:12px;padding-top:8px;border-top:1px dashed #e2e8f0;font-size:8px;color:#94a3b8">Valid for Academic Year {{academic_year}}</div>
-  </div>
-</div>`,
-    createdAt: "2025-01-15",
-    isDefault: true,
-  },
-  {
-    id: "2",
-    name: "Modern Green ID Card",
-    category: "id-card",
-    htmlCode: `<div style="width:340px;height:520px;border-radius:16px;overflow:hidden;font-family:'Inter',sans-serif;background:linear-gradient(180deg,#065f46 0%,#10b981 100%);color:#fff;position:relative;box-shadow:0 8px 32px rgba(6,95,70,0.3)">
-  <div style="text-align:center;padding:20px 16px 12px">
-    <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;font-weight:700">{{school_name}}</div>
-    <div style="font-size:7px;margin-top:2px;opacity:0.8">{{school_address}}</div>
-    <div style="margin:14px auto;width:85px;height:85px;border-radius:12px;border:3px solid rgba(255,255,255,0.4);overflow:hidden;background:#fff">
-      <img src="{{photo_url}}" alt="Student" style="width:100%;height:100%;object-fit:cover" />
-    </div>
-    <div style="font-size:15px;font-weight:700">{{student_name}}</div>
-    <div style="background:rgba(255,255,255,0.2);border-radius:8px;display:inline-block;padding:3px 14px;font-size:9px;margin-top:6px">ID: {{admission_no}}</div>
-  </div>
-  <div style="background:#fff;color:#1e293b;border-radius:20px 20px 0 0;padding:18px 22px;margin-top:8px">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <div><div style="font-size:9px;color:#64748b">Class</div><div style="font-size:12px;font-weight:600">{{class}} - {{section}}</div></div>
-      <div><div style="font-size:9px;color:#64748b">Roll No</div><div style="font-size:12px;font-weight:600">{{roll_no}}</div></div>
-      <div><div style="font-size:9px;color:#64748b">DOB</div><div style="font-size:12px;font-weight:600">{{dob}}</div></div>
-      <div><div style="font-size:9px;color:#64748b">Blood</div><div style="font-size:12px;font-weight:600">{{blood_group}}</div></div>
-    </div>
-    <div style="margin-top:10px;padding-top:8px;border-top:1px solid #e2e8f0">
-      <div style="font-size:9px;color:#64748b">Parent / Guardian</div>
-      <div style="font-size:11px;font-weight:600">{{parent_name}} • {{contact}}</div>
-    </div>
-    <div style="text-align:center;margin-top:10px;font-size:8px;color:#94a3b8">Session {{academic_year}}</div>
-  </div>
-</div>`,
-    createdAt: "2025-01-20",
-    isDefault: false,
-  },
-  {
-    id: "3",
-    name: "Minimal Dark ID Card",
-    category: "id-card",
-    htmlCode: `<div style="width:340px;height:520px;border-radius:16px;overflow:hidden;font-family:'Inter',sans-serif;background:#0f172a;color:#e2e8f0;position:relative;box-shadow:0 8px 32px rgba(15,23,42,0.5)">
-  <div style="background:linear-gradient(90deg,#6366f1,#8b5cf6);height:6px"></div>
-  <div style="padding:20px;text-align:center">
-    <div style="font-size:12px;font-weight:800;letter-spacing:1px">{{school_name}}</div>
-    <div style="font-size:7px;color:#94a3b8;margin-top:2px">{{school_address}}</div>
-    <div style="margin:16px auto;width:80px;height:80px;border-radius:50%;border:2px solid #6366f1;overflow:hidden">
-      <img src="{{photo_url}}" alt="Student" style="width:100%;height:100%;object-fit:cover" />
-    </div>
-    <div style="font-size:16px;font-weight:700;color:#fff">{{student_name}}</div>
-    <div style="font-size:10px;color:#a78bfa;margin-top:2px">{{admission_no}}</div>
-  </div>
-  <div style="padding:0 24px">
-    <div style="background:#1e293b;border-radius:12px;padding:14px 16px">
-      <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:10px;color:#64748b">Class & Section</span><span style="font-size:11px;font-weight:600;color:#fff">{{class}} - {{section}}</span></div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:10px;color:#64748b">Roll Number</span><span style="font-size:11px;font-weight:600;color:#fff">{{roll_no}}</span></div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:10px;color:#64748b">Date of Birth</span><span style="font-size:11px;font-weight:600;color:#fff">{{dob}}</span></div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:10px;color:#64748b">Blood Group</span><span style="font-size:11px;font-weight:600;color:#fff">{{blood_group}}</span></div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:10px;color:#64748b">Guardian</span><span style="font-size:11px;font-weight:600;color:#fff">{{parent_name}}</span></div>
-      <div style="display:flex;justify-content:space-between"><span style="font-size:10px;color:#64748b">Phone</span><span style="font-size:11px;font-weight:600;color:#fff">{{contact}}</span></div>
-    </div>
-    <div style="text-align:center;margin-top:12px;font-size:8px;color:#475569">Academic Year {{academic_year}}</div>
-  </div>
-</div>`,
-    createdAt: "2025-02-01",
-    isDefault: false,
-  },
-  {
-    id: "4",
-    name: "Standard Admit Card",
-    category: "admit-card",
-    htmlCode: `<div style="width:600px;padding:30px;font-family:'Inter',sans-serif;border:2px solid #1e40af;border-radius:12px;background:#fff">
-  <div style="text-align:center;border-bottom:2px solid #1e40af;padding-bottom:14px;margin-bottom:16px">
-    <div style="font-size:18px;font-weight:800;color:#1e40af">{{school_name}}</div>
-    <div style="font-size:10px;color:#64748b;margin-top:2px">{{school_address}}</div>
-    <div style="margin-top:8px;background:#1e40af;color:#fff;display:inline-block;padding:4px 20px;border-radius:4px;font-size:12px;font-weight:700;letter-spacing:1px">ADMIT CARD</div>
-  </div>
-  <div style="display:flex;gap:20px">
-    <div style="flex:1">
-      <table style="width:100%;font-size:12px"><tr><td style="color:#64748b;padding:4px 0;width:100px">Name</td><td style="font-weight:600">{{student_name}}</td></tr><tr><td style="color:#64748b;padding:4px 0">Adm. No</td><td style="font-weight:600">{{admission_no}}</td></tr><tr><td style="color:#64748b;padding:4px 0">Class</td><td style="font-weight:600">{{class}} - {{section}}</td></tr><tr><td style="color:#64748b;padding:4px 0">Roll No</td><td style="font-weight:600">{{roll_no}}</td></tr><tr><td style="color:#64748b;padding:4px 0">Exam</td><td style="font-weight:600">{{exam_name}}</td></tr></table>
-    </div>
-    <div style="width:90px;height:110px;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden"><img src="{{photo_url}}" alt="Student" style="width:100%;height:100%;object-fit:cover" /></div>
-  </div>
-  <div style="margin-top:16px;font-size:10px;color:#64748b;border-top:1px dashed #e2e8f0;padding-top:10px;display:flex;justify-content:space-between"><span>Date: {{exam_date}}</span><span>Authorized Signature ________________</span></div>
-</div>`,
-    createdAt: "2025-01-25",
-    isDefault: true,
-  },
-  {
-    id: "5",
-    name: "Transfer Certificate",
-    category: "transfer",
-    htmlCode: `<div style="width:650px;padding:40px;font-family:'Inter',sans-serif;border:3px double #1e293b;background:#fff">
-  <div style="text-align:center;margin-bottom:20px">
-    <div style="font-size:20px;font-weight:800;color:#1e293b">{{school_name}}</div>
-    <div style="font-size:10px;color:#64748b">{{school_address}}</div>
-    <div style="margin-top:10px;font-size:14px;font-weight:700;text-decoration:underline;letter-spacing:2px">TRANSFER CERTIFICATE</div>
-    <div style="font-size:10px;color:#64748b;margin-top:4px">TC No: {{tc_number}}</div>
-  </div>
-  <div style="font-size:12px;line-height:2.2;color:#334155">
-    <p>This is to certify that <strong>{{student_name}}</strong>, son/daughter of <strong>{{parent_name}}</strong>, bearing Admission No. <strong>{{admission_no}}</strong>, was a bonafide student of this institution.</p>
-    <table style="width:100%;margin:10px 0"><tr><td style="color:#64748b;width:200px;padding:2px 0">Class Last Attended</td><td style="font-weight:600">{{class}} - {{section}}</td></tr><tr><td style="color:#64748b;padding:2px 0">Date of Birth</td><td style="font-weight:600">{{dob}}</td></tr><tr><td style="color:#64748b;padding:2px 0">Date of Admission</td><td style="font-weight:600">{{admission_date}}</td></tr><tr><td style="color:#64748b;padding:2px 0">Date of Leaving</td><td style="font-weight:600">{{leaving_date}}</td></tr><tr><td style="color:#64748b;padding:2px 0">Reason for Leaving</td><td style="font-weight:600">{{reason}}</td></tr><tr><td style="color:#64748b;padding:2px 0">Character & Conduct</td><td style="font-weight:600">{{conduct}}</td></tr></table>
-  </div>
-  <div style="display:flex;justify-content:space-between;margin-top:40px;font-size:11px;color:#64748b"><div>Date: {{issue_date}}</div><div style="text-align:center"><div>________________</div><div style="margin-top:4px">Principal</div></div></div>
-</div>`,
-    createdAt: "2025-02-10",
-    isDefault: true,
-  },
-];
-
 const categoryConfig = {
-  "id-card": { label: "ID Card", icon: CreditCard, color: "bg-primary/10 text-primary" },
-  "admit-card": { label: "Admit Card", icon: FileText, color: "bg-accent/10 text-accent" },
-  "marksheet": { label: "Marksheet", icon: GraduationCap, color: "bg-[hsl(var(--card-green))]/10 text-[hsl(var(--card-green))]" },
-  "transfer": { label: "Transfer Certificate", icon: FileCheck, color: "bg-[hsl(var(--card-orange))]/10 text-[hsl(var(--card-orange))]" },
-  "certificate": { label: "Certificate", icon: Award, color: "bg-[hsl(var(--card-cyan))]/10 text-[hsl(var(--card-cyan))]" },
+  "ID_CARD": { label: "ID Card", icon: CreditCard, color: "bg-primary/10 text-primary" },
+  "ADMIT_CARD": { label: "Admit Card", icon: FileText, color: "bg-accent/10 text-accent" },
+  "MARKSHEET": { label: "Marksheet", icon: GraduationCap, color: "bg-[hsl(var(--card-green))]/10 text-[hsl(var(--card-green))]" },
+  "TRANSFER_CERTIFICATE": { label: "Transfer Certificate", icon: FileCheck, color: "bg-[hsl(var(--card-orange))]/10 text-[hsl(var(--card-orange))]" },
+  "CERTIFICATE": { label: "Certificate", icon: Award, color: "bg-[hsl(var(--card-cyan))]/10 text-[hsl(var(--card-cyan))]" },
+};
+
+const API = "/api/v1/templates";
+
+export const getTemplates = async () => {
+  try {
+    const res = await axiosInstance.get(API);
+    console.log(res)
+    return res.data;
+  } catch (error) {
+    throw new Error("Failed to fetch templates");
+  }
+};
+
+export const createTemplate = async (data: any) => {
+  try {
+    const res = await axiosInstance.post(API, data);
+    return res.data;
+  } catch (error) {
+    throw new Error("Failed to create template");
+  }
+};
+
+export const updateTemplate = async (id: string, data: any) => {
+  try {
+    const res = await axiosInstance.put(`${API}/${id}`, data);
+    return res.data;
+  } catch (error) {
+    throw new Error("Failed to update template");
+  }
+};
+
+export const deleteTemplate = async (id: string) => {
+  try {
+    const res = await axiosInstance.delete(`${API}/${id}`);
+    return res.data;
+  } catch (error) {
+    throw new Error("Failed to delete template");
+  }
 };
 
 /* =============== PAGE ================= */
 
 export default function CertificatePage() {
   const pathname = usePathname();
-  const [templates, setTemplates] = useState<Template[]>(defaultTemplates);
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [loading, setLoading] = useState(false);
   const [showEditor, setShowEditor] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [previewTemplate, setPreviewTemplate] = useState<Template | null>(null);
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
   const [filterCategory, setFilterCategory] = useState<string>("all");
-
+  
   const [formData, setFormData] = useState({
     name: "",
-    category: "id-card" as Template["category"],
+    category: "ID_CARD" as Template["type"],
     htmlCode: "",
   });
 
   const getActiveTab = () => {
-    if (pathname.includes("admit-card")) return "admit-card";
-    if (pathname.includes("marksheet")) return "marksheet";
-    if (pathname.includes("transfer")) return "transfer";
+    if (pathname.includes("ADMIT_CARD")) return "ADMIT_CARD";
+    if (pathname.includes("MARKSHEET")) return "MARKSHEET";
+    if (pathname.includes("TRANSFER_CERTIFICATE")) return "TRANSFER_CERTIFICATE";
     if (pathname.includes("generate")) return "generate";
-    return "id-card";
+    if (pathname.includes("ID_CARD")) return "ID_CARD";
+    return "ID_CARD";
   };
 
   const sampleData: Record<string, string> = {
@@ -225,53 +137,156 @@ export default function CertificatePage() {
     return rendered;
   };
 
-  const handleSave = () => {
-    if (!formData.name || !formData.htmlCode) {
-      toast({ title: "Error", description: "Please fill name and HTML code", variant: "destructive" });
-      return;
-    }
+const handleSave = async () => {
+  if (!formData.name || !formData.htmlCode) {
+    toast({
+      title: "Error",
+      description: "Please fill name and HTML code",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  try {
     if (editingTemplate) {
-      setTemplates(prev => prev.map(t => t.id === editingTemplate.id ? { ...t, ...formData } : t));
+      await updateTemplate(editingTemplate.id, {
+        name: formData.name,
+        type: formData.category,
+        template: formData.htmlCode,
+      });
+
       toast({ title: "Template Updated" });
     } else {
-      const newT: Template = {
-        id: Date.now().toString(),
-        ...formData,
-        createdAt: new Date().toISOString().split("T")[0],
-        isDefault: false,
-      };
-      setTemplates(prev => [...prev, newT]);
+      await createTemplate({
+        name: formData.name,
+        type: formData.category,
+        template: formData.htmlCode,
+      });
+
       toast({ title: "Template Created" });
     }
+
+    fetchTemplates();
+
     setShowEditor(false);
     setEditingTemplate(null);
-    setFormData({ name: "", category: "id-card", htmlCode: "" });
-  };
+    setFormData({ name: "", category: "ID_CARD", htmlCode: "" });
+
+  } catch (error) {
+    toast({
+      title: "Error",
+      description: "Failed to save template",
+      variant: "destructive",
+    });
+  }
+};
 
   const handleEdit = (t: Template) => {
     setEditingTemplate(t);
-    setFormData({ name: t.name, category: t.category, htmlCode: t.htmlCode });
+    setFormData({
+      name: t.name,
+      category: t.type as Template["type"],
+      htmlCode: t.template,
+    });
     setShowEditor(true);
   };
 
-  const handleDelete = (id: string) => {
-    setTemplates(prev => prev.filter(t => t.id !== id));
-    toast({ title: "Template Deleted" });
-  };
+const handleDelete = async (id: string) => {
+  try {
+    await deleteTemplate(id);
 
-  const handleDuplicate = (t: Template) => {
-    const dup: Template = { ...t, id: Date.now().toString(), name: `${t.name} (Copy)`, isDefault: false };
-    setTemplates(prev => [...prev, dup]);
+    toast({
+      title: "Template Deleted",
+    });
+
+    fetchTemplates();
+  } catch (error) {
+    toast({
+      title: "Error",
+      description: "Failed to delete template",
+      variant: "destructive",
+    });
+  }
+};
+
+  useEffect(() => {
+  setActiveTab(getActiveTab());
+}, [pathname]);
+
+const [activeTab, setActiveTab] = useState(getActiveTab());
+
+
+const handleDuplicate = async (t: Template) => {
+  try {
+    await createTemplate({
+      name: `${t.name} (Copy)`,
+      type: t.type,
+      template: t.template,
+    });
+
     toast({ title: "Template Duplicated" });
-  };
 
-  const filtered = filterCategory === "all" ? templates : templates.filter(t => t.category === filterCategory);
+    fetchTemplates();
+  } catch {
+    toast({
+      title: "Error",
+      description: "Failed to duplicate template",
+      variant: "destructive",
+    });
+  }
+};
+
+const mapAPITypeToUI = (type: string): Template["type"] => {
+  switch (type) {
+    case "ID_CARD":
+      return "ID_CARD";
+    case "ADMIT_CARD":
+      return "ADMIT_CARD";
+    case "MARKSHEET":
+      return "MARKSHEET";
+    case "TRANSFER_CERTIFICATE":
+      return "TRANSFER_CERTIFICATE";
+    case "CERTIFICATE":
+      return "CERTIFICATE";
+    default:
+      return "CERTIFICATE";
+  }
+};
+
+  const filtered = filterCategory === "all" ? templates : templates.filter(t => t.type === filterCategory);
   const stats = {
     total: templates.length,
-    idCards: templates.filter(t => t.category === "id-card").length,
-    admitCards: templates.filter(t => t.category === "admit-card").length,
-    certificates: templates.filter(t => ["transfer", "certificate", "marksheet"].includes(t.category)).length,
+    idCards: templates.filter(t => t.type === "ID_CARD").length,
+    admitCards: templates.filter(t => t.type === "ADMIT_CARD").length,
+    certificates: templates.filter(t => ["TRANSFER_CERTIFICATE", "CERTIFICATE", "MARKSHEET"].includes(t.type)).length,
   };
+
+  const fetchTemplates = async () => {
+  try {
+    setLoading(true);
+    const res = await getTemplates();
+    const formatted = (res.data?.data || []).map((t: any) => ({
+  ...t,
+  type: mapAPITypeToUI(t.type),
+}));
+
+setTemplates(formatted);
+  } catch (error) {
+    toast({
+      title: "Error",
+      description: "Failed to fetch templates",
+      variant: "destructive",
+    });
+  } finally {
+    setLoading(false);
+  }
+  };
+
+useEffect(() => {
+  fetchTemplates();
+}, []);
+
+
 
   return (
     <AdminLayout>
@@ -290,14 +305,14 @@ export default function CertificatePage() {
                 Certificate & Template Manager
             </h1>
             <p className="text-sm text-gray-700 mt-2 max-w-xl">
-                Create and manage HTML templates for ID cards, admit cards, marksheets & certificates
+                Create and manage HTML templates for ID cards, admit cards, MARKSHEETs & certificates
             </p>
             </div>
 
             <Button
             onClick={() => {
                 setEditingTemplate(null);
-                setFormData({ name: "", category: "id-card", htmlCode: "" });
+                setFormData({ name: "", category: "ID_CARD", htmlCode: "" });
                 setShowEditor(true);
             }}
             className="mt-4 md:mt-0 flex items-center justify-center
@@ -372,29 +387,29 @@ export default function CertificatePage() {
         </div>
 
         <div className="flex-1 overflow-auto">
-            <Tabs defaultValue={getActiveTab()} className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             {/* Tab List */}
             <TabsList className="bg-gradient-to-r from-purple-100 via-pink-50 to-blue-100 rounded-xl p-1 shadow-inner mb-6">
                 <TabsTrigger
-                value="id-card"
+                value="ID_CARD"
                 className="rounded-lg text-sm font-semibold text-gray-700 hover:text-white hover:bg-purple-400 data-[state=active]:bg-purple-500 data-[state=active]:text-white transition-colors"
                 >
                 ID Cards
                 </TabsTrigger>
                 <TabsTrigger
-                value="admit-card"
+                value="ADMIT_CARD"
                 className="rounded-lg text-sm font-semibold text-gray-700 hover:text-white hover:bg-pink-400 data-[state=active]:bg-pink-500 data-[state=active]:text-white transition-colors"
                 >
                 Admit Cards
                 </TabsTrigger>
                 <TabsTrigger
-                value="marksheet"
+                value="MARKSHEET"
                 className="rounded-lg text-sm font-semibold text-gray-700 hover:text-white hover:bg-green-400 data-[state=active]:bg-green-500 data-[state=active]:text-white transition-colors"
                 >
                 Marksheets
                 </TabsTrigger>
                 <TabsTrigger
-                value="transfer"
+                value="TRANSFER_CERTIFICATE"
                 className="rounded-lg text-sm font-semibold text-gray-700 hover:text-white hover:bg-yellow-400 data-[state=active]:bg-yellow-500 data-[state=active]:text-white transition-colors"
                 >
                 Transfer Cert.
@@ -408,10 +423,10 @@ export default function CertificatePage() {
             </TabsList>
 
             {/* Individual Category Tabs */}
-            {(["id-card", "admit-card", "marksheet", "transfer"] as const).map((cat) => (
+            {(["ID_CARD", "ADMIT_CARD", "MARKSHEET", "TRANSFER_CERTIFICATE"] as const).map((cat) => (
                 <TabsContent className="transition-all duration-300" key={cat} value={cat}>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {templates.filter((t) => t.category === cat).length === 0 ? (
+                    {templates.filter((t) => t.type === cat).length === 0 ? (
                     <Card className="col-span-full border-dashed border-2 border-gray-300 bg-gradient-to-r from-gray-50 via-gray-100 to-gray-50 shadow-inner rounded-xl">
                         <CardContent className="p-12 text-center text-gray-400 text-lg flex flex-col items-center justify-center gap-2">
                         <span className="text-4xl">📄</span>
@@ -420,7 +435,7 @@ export default function CertificatePage() {
                     </Card>
                     ) : (
                     templates
-                        .filter((t) => t.category === cat)
+                        .filter((t) => t.type === cat)
                         .map((t) => (
                         <TemplateCard
                             key={t.id}
@@ -450,11 +465,11 @@ export default function CertificatePage() {
                         </SelectTrigger>
                         <SelectContent>
                         <SelectItem value="all">All Categories</SelectItem>
-                        <SelectItem value="id-card">ID Cards</SelectItem>
-                        <SelectItem value="admit-card">Admit Cards</SelectItem>
-                        <SelectItem value="marksheet">Marksheets</SelectItem>
-                        <SelectItem value="transfer">Transfer Certificates</SelectItem>
-                        <SelectItem value="certificate">Certificates</SelectItem>
+                        <SelectItem value="ID_CARD">ID Cards</SelectItem>
+                        <SelectItem value="ADMIT_CARD">Admit Cards</SelectItem>
+                        <SelectItem value="MARKSHEET">Marksheets</SelectItem>
+                        <SelectItem value="TRANSFER_CERTIFICATE">Transfer Certificates</SelectItem>
+                        <SelectItem value="CERTIFICATE">Certificates</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -525,18 +540,18 @@ export default function CertificatePage() {
                         <Select
                             value={formData.category}
                             onValueChange={(v) =>
-                            setFormData((p) => ({ ...p, category: v as Template["category"] }))
+                            setFormData((p) => ({ ...p, category: v as Template["type"] }))
                             }
                         >
                             <SelectTrigger className="rounded-xl bg-purple-50/60 border-purple-200 focus:ring-2 focus:ring-purple-400">
                             <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                            <SelectItem value="id-card">ID Card</SelectItem>
-                            <SelectItem value="admit-card">Admit Card</SelectItem>
-                            <SelectItem value="marksheet">Marksheet</SelectItem>
-                            <SelectItem value="transfer">Transfer Certificate</SelectItem>
-                            <SelectItem value="certificate">Certificate</SelectItem>
+                            <SelectItem value="ID_CARD">ID Card</SelectItem>
+                            <SelectItem value="ADMIT_CARD">Admit Card</SelectItem>
+                            <SelectItem value="MARKSHEET">Marksheet</SelectItem>
+                            <SelectItem value="TRANSFER_CERTIFICATE">Transfer Certificate</SelectItem>
+                            <SelectItem value="CERTIFICATE">Certificate</SelectItem>
                             </SelectContent>
                         </Select>
                         </div>
@@ -629,7 +644,7 @@ export default function CertificatePage() {
                 <div
                 className="bg-white rounded-lg shadow-lg p-4"
                 dangerouslySetInnerHTML={{
-                    __html: renderHtmlWithData(previewTemplate.htmlCode),
+                    __html: renderHtmlWithData(previewTemplate.template),
                 }}
                 />
             )}
@@ -701,7 +716,7 @@ function TemplateCard({
   onDuplicate: () => void;
   renderHtml: (html: string) => string;
 }) {
-  const cat = categoryConfig[template.category];
+  const cat = categoryConfig[template.type] || categoryConfig["CERTIFICATE"];
 
   return (
     <Card className="shadow-lg hover:shadow-2xl transition-transform transform hover:-translate-y-1 group rounded-2xl overflow-hidden border border-gray-100 bg-gradient-to-br from-white/80 to-gray-50 backdrop-blur-sm">
@@ -729,7 +744,7 @@ function TemplateCard({
             height: "150px",
           }}
         >
-          <div dangerouslySetInnerHTML={{ __html: renderHtml(template.htmlCode) }} />
+          <div dangerouslySetInnerHTML={{ __html: renderHtml(template.template) }} />
         </div>
 
         <div className="flex items-center gap-2 pt-2">

@@ -2,7 +2,7 @@ import axios from "axios";
 
 export const axiosInstance = axios.create({
   // baseURL: "http://172.31.112.248:3000",
-  baseURL: "http://192.168.1.15:3000",
+  baseURL: "http://192.168.1.9:3000",
   // baseURL: "http://dezoryn-school.ap-south-1.elasticbeanstalk.com",
   headers: {
     "Content-Type": "application/json",
