@@ -422,69 +422,124 @@ const handleDownload = async () => {
                                 </div>
 
                                 <Dialog open={viewOpen} onOpenChange={setViewOpen}>
-                                    <DialogContent className="max-w-xl">
-                                        <DialogHeader>
-                                        <DialogTitle>View Enquiry</DialogTitle>
-                                        </DialogHeader>
-                                        {selectedEnquiry && (
-                                        <div className="space-y-3 mt-4">
-                                            <p><strong>Student Name:</strong> {selectedEnquiry.studentName}</p>
-                                            <p><strong>Parent Name:</strong> {selectedEnquiry.parentName}</p>
-                                            <p><strong>Phone:</strong> {selectedEnquiry.phone}</p>
-                                            <p><strong>Email:</strong> {selectedEnquiry.email}</p>
-                                            <p><strong>Description:</strong> {selectedEnquiry.description}</p>
+                                <DialogContent className="max-w-xl p-0 overflow-hidden rounded-2xl">
+
+                                    {/* Header */}
+                                    <div className="bg-gradient-to-r from-indigo-500 to-blue-600 text-white p-5">
+                                    <DialogTitle className="text-lg font-semibold">
+                                        Enquiry Details
+                                    </DialogTitle>
+                                    <p className="text-sm opacity-90">Student enquiry information</p>
+                                    </div>
+
+                                    {selectedEnquiry && (
+                                    <div className="p-6 space-y-4">
+
+                                        <div className="bg-gray-50 p-4 rounded-xl shadow-sm grid grid-cols-2 gap-3 text-sm">
+                                        <p><strong>Student Name:</strong> {selectedEnquiry.studentName}</p>
+                                        <p><strong>Parent Name:</strong> {selectedEnquiry.parentName}</p>
+                                        <p><strong>Phone:</strong> {selectedEnquiry.phone}</p>
+                                        <p><strong>Email:</strong> {selectedEnquiry.email}</p>
                                         </div>
-                                        )}
-                                        <div className="flex justify-end mt-4">
-                                        <Button onClick={() => setViewOpen(false)}>Close</Button>
+
+                                        <div className="bg-blue-50 p-4 rounded-xl shadow-sm">
+                                        <p className="font-semibold text-gray-700 mb-1">Description</p>
+                                        <p className="text-sm text-gray-600">
+                                            {selectedEnquiry.description}
+                                        </p>
                                         </div>
-                                    </DialogContent>
+
+                                        <div className="flex justify-end">
+                                        <Button
+                                            className="bg-indigo-600 hover:bg-indigo-700"
+                                            onClick={() => setViewOpen(false)}
+                                        >
+                                            Close
+                                        </Button>
+                                        </div>
+
+                                    </div>
+                                    )}
+
+                                </DialogContent>
                                 </Dialog>
 
                                 <Dialog open={editOpen} onOpenChange={setEditOpen}>
-                                    <DialogContent className="max-w-xl">
-                                        <DialogHeader>
-                                        <DialogTitle>Edit Enquiry</DialogTitle>
-                                        </DialogHeader>
+                                <DialogContent className="max-w-xl p-0 overflow-hidden rounded-2xl">
 
-                                        <div className="grid grid-cols-1 gap-4 mt-4">
-                                        <Input
-                                            name="studentName"
-                                            value={editForm.studentName}
-                                            onChange={handleEditChange}
-                                            placeholder="Student Name"
-                                        />
-                                        <Input
-                                            name="parentName"
-                                            value={editForm.parentName}
-                                            onChange={handleEditChange}
-                                            placeholder="Parent Name"
-                                        />
-                                        <Input
-                                            name="phone"
-                                            value={editForm.phone}
-                                            onChange={handleEditChange}
-                                            placeholder="Phone"
-                                        />
-                                        <Input
-                                            name="email"
-                                            value={editForm.email}
-                                            onChange={handleEditChange}
-                                            placeholder="Email"
-                                        />
-                                        <Textarea
-                                            name="description"
-                                            value={editForm.description}
-                                            onChange={handleEditChange}
-                                            placeholder="Description"
-                                        />
-                                        </div>
+                                    {/* Header */}
+                                    <div className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white p-5">
+                                    <DialogTitle className="text-lg font-semibold">
+                                        Edit Enquiry
+                                    </DialogTitle>
+                                    <p className="text-sm opacity-90">
+                                        Update enquiry information
+                                    </p>
+                                    </div>
 
-                                        <div className="flex justify-end gap-2 mt-4">
-                                        <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
-                                        <Button onClick={handleEditSave}>Save</Button>
-                                        </div>
-                                    </DialogContent>
+                                    <div className="p-6 space-y-4">
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                                        <Input
+                                        name="studentName"
+                                        value={editForm.studentName}
+                                        onChange={handleEditChange}
+                                        placeholder="Student Name"
+                                        />
+
+                                        <Input
+                                        name="parentName"
+                                        value={editForm.parentName}
+                                        onChange={handleEditChange}
+                                        placeholder="Parent Name"
+                                        />
+
+                                        <Input
+                                        name="phone"
+                                        value={editForm.phone}
+                                        onChange={handleEditChange}
+                                        placeholder="Phone"
+                                        />
+
+                                        <Input
+                                        name="email"
+                                        value={editForm.email}
+                                        onChange={handleEditChange}
+                                        placeholder="Email"
+                                        />
+
+                                    </div>
+
+                                    <Textarea
+                                        name="description"
+                                        value={editForm.description}
+                                        onChange={handleEditChange}
+                                        placeholder="Description"
+                                        className="min-h-[100px]"
+                                    />
+
+                                    <div className="flex justify-end gap-3 pt-2">
+
+                                        <Button
+                                        variant="outline"
+                                        onClick={() => setEditOpen(false)}
+                                        >
+                                        Cancel
+                                        </Button>
+
+                                        <Button
+                                        className="bg-indigo-600 hover:bg-indigo-700"
+                                        onClick={handleEditSave}
+                                        >
+                                        Save Changes
+                                        </Button>
+
+                                    </div>
+
+                                    </div>
+
+                                </DialogContent>
                                 </Dialog>
 
 

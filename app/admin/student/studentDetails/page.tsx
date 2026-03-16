@@ -355,139 +355,240 @@ const Page = () => {
 
                           {/* ================= VIEW MODAL ================= */}
                           <Dialog open={viewOpen} onOpenChange={setViewOpen}>
-                            <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
-                              <DialogHeader>
-                                <DialogTitle>Student Details</DialogTitle>
-                              </DialogHeader>
+                            <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto p-0 rounded-2xl">
 
                               {selectedStudent && (
-                                <div className="space-y-2 text-sm pr-2">
+                                <div>
 
-                                  <p><strong>Name:</strong> {selectedStudent.name}</p>
-                                  <p><strong>Admission No:</strong> {selectedStudent.admissionNumber}</p>
-                                  <p><strong>Roll No:</strong> {selectedStudent.rollNumber}</p>
+                                  {/* Header */}
+                                  <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-6 rounded-t-2xl flex flex-col items-center">
+                                    
+                                    <img
+                                      src={selectedStudent.image || "/student.png"}
+                                      alt="student"
+                                      className="w-24 h-24 rounded-full border-4 border-white shadow-lg object-cover"
+                                    />
 
-                                  <p>
-                                    <strong>Class:</strong>{" "}
-                                    {selectedStudent?.section?.class?.name || "-"} -{" "}
-                                    {selectedStudent?.section?.name || "-"}
-                                  </p>
+                                    <h2 className="text-xl font-semibold mt-3">
+                                      {selectedStudent.name}
+                                    </h2>
 
-                                  <p><strong>Gender:</strong> {selectedStudent.gender}</p>
-                                  <p><strong>DOB:</strong> {selectedStudent.dateOfBirth}</p>
-                                  <p><strong>Phone:</strong> {selectedStudent.phone}</p>
-                                  <p><strong>Email:</strong> {selectedStudent.email}</p>
+                                    <p className="text-sm opacity-90">
+                                      Admission No: {selectedStudent.admissionNumber}
+                                    </p>
 
-                                  <hr className="my-2"/>
-
-                                  <p><strong>Admission Fee:</strong> ₹{selectedStudent?.fee?.admissionFee || 0}</p>
-                                  <p><strong>Tuition Fee:</strong> ₹{selectedStudent?.fee?.tutionFee || 0}</p>
-                                  <p><strong>Transport Fee:</strong> ₹{selectedStudent?.fee?.transportFee || 0}</p>
-                                  <p><strong>Hostel Fee:</strong> ₹{selectedStudent?.fee?.hostelFee || 0}</p>
-                                  <p><strong>Other Fee:</strong> ₹{selectedStudent?.fee?.otherFee || 0}</p>
-
-                                  <p><strong>Total Fee:</strong> ₹{selectedStudent?.fee?.totalFee || 0}</p>
-                                  <p><strong>Deposited:</strong> ₹{selectedStudent?.fee?.depositFee || 0}</p>
-                                  <p><strong>Installments:</strong> {selectedStudent?.fee?.installments || 1}</p>
-
-                                  <p>
-                                    <strong>Due Date:</strong>{" "}
-                                    {selectedStudent?.fee?.dueDate
-                                      ? new Date(selectedStudent.fee.dueDate).toLocaleDateString()
-                                      : "-"}
-                                  </p>
-
-                                  <p>
-                                    <strong>Status:</strong>{" "}
-                                    <Badge className="bg-yellow-100 text-yellow-700">
-                                      {selectedStudent?.fee?.status || "PENDING"}
+                                    <Badge className="mt-2 bg-white text-indigo-600">
+                                      {selectedStudent?.section?.class?.name || "-"} -{" "}
+                                      {selectedStudent?.section?.name || "-"}
                                     </Badge>
-                                  </p>
 
-                                  <hr className="my-2"/>
+                                  </div>
 
-                                  <p><strong>Discount Name:</strong> {selectedStudent?.discount?.Discount?.name || "-"}</p>
+                                  {/* Body */}
+                                  <div className="p-6 space-y-6">
 
-                                  <p>
-                                    <strong>Discount Type:</strong>{" "}
-                                    {selectedStudent?.discount?.Discount?.type || "-"}
-                                  </p>
+                                    {/* Basic Info */}
+                                    <div className="bg-gray-50 p-4 rounded-xl shadow-sm">
+                                      <h3 className="font-semibold text-gray-700 mb-3">
+                                        Basic Information
+                                      </h3>
 
-                                  <p>
-                                    <strong>Discount Value:</strong>{" "}
-                                    {selectedStudent?.discount?.Discount?.value || 0}
-                                    {selectedStudent?.discount?.Discount?.type === "PERCENTAGE" ? "%" : "₹"}
-                                  </p>
+                                      <div className="grid grid-cols-2 gap-3 text-sm">
+                                        <p><strong>Roll No:</strong> {selectedStudent.rollNumber}</p>
+                                        <p><strong>Gender:</strong> {selectedStudent.gender}</p>
+                                        <p><strong>DOB:</strong> {selectedStudent.dateOfBirth}</p>
+                                        <p><strong>Phone:</strong> {selectedStudent.phone}</p>
+                                        <p className="col-span-2">
+                                          <strong>Email:</strong> {selectedStudent.email}
+                                        </p>
+                                      </div>
+                                    </div>
 
-                                  <p>
-                                    <strong>Discount Amount:</strong> ₹{selectedStudent?.discount?.amount || 0}
-                                  </p>
+                                    {/* Fee Section */}
+                                    <div className="bg-green-50 p-4 rounded-xl shadow-sm">
+                                      <h3 className="font-semibold text-green-700 mb-3">
+                                        Fee Details
+                                      </h3>
 
+                                      <div className="grid grid-cols-2 gap-3 text-sm">
+
+                                        <p>Admission Fee: ₹{selectedStudent?.fee?.admissionFee || 0}</p>
+                                        <p>Tuition Fee: ₹{selectedStudent?.fee?.tutionFee || 0}</p>
+
+                                        <p>Transport Fee: ₹{selectedStudent?.fee?.transportFee || 0}</p>
+                                        <p>Hostel Fee: ₹{selectedStudent?.fee?.hostelFee || 0}</p>
+
+                                        <p>Other Fee: ₹{selectedStudent?.fee?.otherFee || 0}</p>
+
+                                        <p className="font-semibold text-green-800">
+                                          Total Fee: ₹{selectedStudent?.fee?.totalFee || 0}
+                                        </p>
+
+                                        <p className="font-semibold text-blue-600">
+                                          Deposited: ₹{selectedStudent?.fee?.depositFee || 0}
+                                        </p>
+
+                                        <p>Installments: {selectedStudent?.fee?.installments || 1}</p>
+
+                                        <p>
+                                          Due Date:{" "}
+                                          {selectedStudent?.fee?.dueDate
+                                            ? new Date(selectedStudent.fee.dueDate).toLocaleDateString()
+                                            : "-"}
+                                        </p>
+                                      </div>
+
+                                      <div className="mt-3">
+                                        <Badge className="bg-yellow-100 text-yellow-700">
+                                          {selectedStudent?.fee?.status || "PENDING"}
+                                        </Badge>
+                                      </div>
+                                    </div>
+
+                                    {/* Discount Section */}
+                                    <div className="bg-purple-50 p-4 rounded-xl shadow-sm">
+                                      <h3 className="font-semibold text-purple-700 mb-3">
+                                        Discount
+                                      </h3>
+
+                                      <div className="grid grid-cols-2 gap-3 text-sm">
+                                        <p>
+                                          <strong>Name:</strong>{" "}
+                                          {selectedStudent?.discount?.Discount?.name || "-"}
+                                        </p>
+
+                                        <p>
+                                          <strong>Type:</strong>{" "}
+                                          {selectedStudent?.discount?.Discount?.type || "-"}
+                                        </p>
+
+                                        <p>
+                                          <strong>Value:</strong>{" "}
+                                          {selectedStudent?.discount?.Discount?.value || 0}
+                                          {selectedStudent?.discount?.Discount?.type === "PERCENTAGE"
+                                            ? "%"
+                                            : "₹"}
+                                        </p>
+
+                                        <p className="font-semibold text-purple-700">
+                                          Amount: ₹{selectedStudent?.discount?.amount || 0}
+                                        </p>
+                                      </div>
+                                    </div>
+
+                                  </div>
                                 </div>
                               )}
+
                             </DialogContent>
                           </Dialog>
 
                           {/* ================= EDIT MODAL ================= */}
-                            <Dialog open={editOpen} onOpenChange={setEditOpen}>
-                              <DialogContent  className="max-w-md max-h-[80vh] overflow-y-auto">
-                                <DialogHeader>
-                                  <DialogTitle>Edit Student</DialogTitle>
-                                </DialogHeader>
+                          <Dialog open={editOpen} onOpenChange={setEditOpen}>
+                            <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto p-0 rounded-2xl">
 
-                                {editData && (
-                                  <div className="space-y-3">
-                                    <Input
-                                      placeholder="Name"
-                                      value={editData.name || ""}
-                                      onChange={(e) =>
-                                        setEditData({ ...editData, name: e.target.value })
-                                      }
-                                    />
-                                    
-                                    <Input
-                                      placeholder="Fees"
-                                      value={editData.fees || ""}
-                                      onChange={(e) =>
-                                        setEditData({ ...editData, fees: e.target.value })
-                                      }
+                              {editData && (
+                                <div>
+
+                                  {/* Header */}
+                                  <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-6 rounded-t-2xl flex flex-col items-center">
+
+                                    <img
+                                      src={editData.image || "/student.png"}
+                                      alt="student"
+                                      className="w-24 h-24 rounded-full border-4 border-white shadow-lg object-cover"
                                     />
 
-                                    <Input
-                                      placeholder="Phone"
-                                      value={editData.phone || ""}
-                                      onChange={(e) =>
-                                        setEditData({ ...editData, phone: e.target.value })
-                                      }
-                                    />
+                                    <h2 className="text-xl font-semibold mt-3">
+                                      Edit Student
+                                    </h2>
 
-                                    <Select
-                                      value={editData.status}
-                                      onValueChange={(value) =>
-                                        setEditData({ ...editData, status: value })
-                                      }
-                                    >
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Select Status" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="Active">Active</SelectItem>
-                                        <SelectItem value="Inactive">Inactive</SelectItem>
-                                      </SelectContent>
-                                    </Select>
+                                    <p className="text-sm opacity-90">
+                                      Admission No: {editData.admissionNumber || "-"}
+                                    </p>
+
                                   </div>
-                                )}
 
-                                <DialogFooter>
-                                  <Button variant="outline" onClick={() => setEditOpen(false)}>
-                                    Cancel
-                                  </Button>
-                                  <Button onClick={handleUpdate}>
-                                    Update
-                                  </Button>
-                                </DialogFooter>
-                              </DialogContent>
-                            </Dialog>
+                                  {/* Body */}
+                                  <div className="p-6 space-y-6">
+
+                                    {/* Basic Information */}
+                                    <div className="bg-gray-50 p-4 rounded-xl shadow-sm">
+                                      <h3 className="font-semibold text-gray-700 mb-4">
+                                        Basic Information
+                                      </h3>
+
+                                      <div className="grid grid-cols-2 gap-4">
+
+                                        <Input
+                                          placeholder="Student Name"
+                                          value={editData.name || ""}
+                                          onChange={(e) =>
+                                            setEditData({ ...editData, name: e.target.value })
+                                          }
+                                        />
+
+                                        <Input
+                                          placeholder="Phone Number"
+                                          value={editData.phone || ""}
+                                          onChange={(e) =>
+                                            setEditData({ ...editData, phone: e.target.value })
+                                          }
+                                        />
+
+                                        <Input
+                                          placeholder="Fees"
+                                          value={editData.fees || ""}
+                                          onChange={(e) =>
+                                            setEditData({ ...editData, fees: e.target.value })
+                                          }
+                                        />
+
+                                        <Select
+                                          value={editData.status}
+                                          onValueChange={(value) =>
+                                            setEditData({ ...editData, status: value })
+                                          }
+                                        >
+                                          <SelectTrigger>
+                                            <SelectValue placeholder="Select Status" />
+                                          </SelectTrigger>
+
+                                          <SelectContent>
+                                            <SelectItem value="Active">Active</SelectItem>
+                                            <SelectItem value="Inactive">Inactive</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+
+                                      </div>
+                                    </div>
+
+                                    {/* Footer Buttons */}
+                                    <div className="flex justify-end gap-3">
+
+                                      <Button
+                                        variant="outline"
+                                        onClick={() => setEditOpen(false)}
+                                      >
+                                        Cancel
+                                      </Button>
+
+                                      <Button
+                                        className="bg-indigo-600 hover:bg-indigo-700"
+                                        onClick={handleUpdate}
+                                      >
+                                        Update Student
+                                      </Button>
+
+                                    </div>
+
+                                  </div>
+
+                                </div>
+                              )}
+
+                            </DialogContent>
+                          </Dialog>
 
                       </TableCell>
 

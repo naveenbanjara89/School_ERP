@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Card,  CardContent,} from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -223,101 +223,133 @@ useEffect(() => {
 
                 {/* Installment Detail Dialog */}
                 <Dialog open={viewDetail !== null} onOpenChange={() => setViewDetail(null)}>
-                    <DialogContent className="max-w-lg">
-                        <DialogHeader>
-                            <DialogTitle className="flex items-center gap-2 text-lg font-semibold text-indigo-600">
-                                <ReceiptIndianRupee className="h-6 w-6 text-indigo-500" /> Payment Details
-                            </DialogTitle>
-                        </DialogHeader>
+                <DialogContent className="max-w-xl p-0 overflow-hidden rounded-2xl">
 
-                        {viewDetail &&
-                        (() => {
-                            const record = payments.find((p: any) => p.id === viewDetail);
-                            if (!record) return null;
+                    {viewDetail &&
+                    (() => {
+                        const record = payments.find((p: any) => p.id === viewDetail);
+                        if (!record) return null;
 
-                            const student = record.Student || record.Fee?.Student;
-                            const parentName = student?.parentName || "-";
-                            const className = student?.section?.name || "-";
-                            const totalFee = record?.Fee?.totalFee || 0;
-                            const paid = record?.amount || 0;
-                            const due = Math.max(totalFee - paid, 0); // never negative
-                            const status = due === 0 ? "Completed" : "Partial";
-                            // const percentage = totalFee === 0 ? 0 : (paid / totalFee) * 100;
+                        const student = record.Student || record.Fee?.Student;
+                        const parentName = student?.parentName || "-";
+                        const className = student?.section?.name || "-";
+                        const totalFee = record?.Fee?.totalFee || 0;
+                        const paid = record?.amount || 0;
+                        const due = Math.max(totalFee - paid, 0);
+                        const status = due === 0 ? "Completed" : "Partial";
+                        const percentage = totalFee === 0 ? 0 : (paid / totalFee) * 100;
 
-                            return (
-                            <div className="space-y-6">
-                                {/* Student Info */}
-                                <div className="bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 p-4 rounded-xl shadow-sm border border-gray-100">
-                                <h3 className="text-sm font-semibold text-gray-700 mb-2">Student Info</h3>
-                                <div className="grid grid-cols-2 gap-3 text-sm text-gray-600">
-                                    <div>
-                                    <span className="font-medium text-gray-800">Student:</span> {student?.name || "-"}
-                                    </div>
-                                    <div>
-                                    <span className="font-medium text-gray-800">Parent:</span> {parentName}
-                                    </div>
-                                    <div>
-                                    <span className="font-medium text-gray-800">Class:</span> {className}
-                                    </div>
-                                    <div>
-                                    <span className="font-medium text-gray-800">Transaction Id:</span> {record.transactionId || "-"}
-                                    </div>
-                                </div>
-                                </div>
+                        return (
+                        <div>
 
-                                {/* Fee Info */}
-                                <div className="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow-sm border border-gray-100 space-y-3">
-                                <h3 className="text-sm font-semibold text-gray-700 mb-2">Payment Info</h3>
+                            {/* Header */}
+                            <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6 flex items-center gap-4">
+                            <div className="w-14 h-14 flex items-center justify-center rounded-full bg-white/20">
+                                <ReceiptIndianRupee className="h-7 w-7" />
+                            </div>
+
+                            <div>
+                                <DialogTitle className="text-lg font-semibold">
+                                Payment Details
+                                </DialogTitle>
+                                <p className="text-sm opacity-90">
+                                Installment payment information
+                                </p>
+                            </div>
+                            </div>
+
+                            <div className="p-6 space-y-6">
+
+                            {/* Student Info */}
+                            <div className="bg-gray-50 p-4 rounded-xl shadow-sm border">
+                                <h3 className="text-sm font-semibold text-gray-700 mb-3">
+                                Student Information
+                                </h3>
 
                                 <div className="grid grid-cols-2 gap-3 text-sm">
-                                    <div>
-                                    <span className="font-medium text-gray-800">Total Fee:</span>{" "}
-                                    <span className="text-purple-600">₹{totalFee.toLocaleString()}</span>
-                                    </div>
-                                    <div>
-                                    <span className="font-medium text-gray-800">Paid:</span>{" "}
-                                    <span className="text-emerald-600 font-medium">₹{paid.toLocaleString()}</span>
-                                    </div>
-                                    <div>
-                                    <span className="font-medium text-gray-800">Due:</span>{" "}
-                                    <span className="text-red-600 font-medium">₹{due.toLocaleString()}</span>
-                                    </div>
-                                    <div>
-                                    <span className="font-medium text-gray-800">Status:</span>{" "}
-                                    <Badge
-                                        className={`ml-1 border ${
-                                        status === "Completed"
-                                            ? "bg-emerald-100 text-emerald-700 border-emerald-200"
-                                            : "bg-amber-100 text-amber-700 border-amber-200"
-                                        }`}
-                                    >
-                                        {status}
-                                    </Badge>
-                                    </div>
-                                </div>
-
-                                {/* Progress */}
-                                {/* {totalFee > 0 && (
-                                    <div className="mt-3">
-                                    <Progress
-                                        value={percentage}
-                                        className="h-3 rounded-full bg-gray-200 dark:bg-gray-700"
-                                        style={{ background: "linear-gradient(to right, #6366f1, #8b5cf6, #ec4899)" }}
-                                    />
-                                    <p className="text-xs text-gray-500 mt-1 text-right">{Math.round(percentage)}% paid</p>
-                                    </div>
-                                )} */}
+                                <p><span className="font-medium">Student:</span> {student?.name || "-"}</p>
+                                <p><span className="font-medium">Parent:</span> {parentName}</p>
+                                <p><span className="font-medium">Class:</span> {className}</p>
+                                <p><span className="font-medium">Transaction ID:</span> {record.transactionId || "-"}</p>
                                 </div>
                             </div>
-                            );
-                        })()}
 
-                        <DialogFooter>
-                        <Button variant="outline" className="text-gray-600" onClick={() => setViewDetail(null)}>
-                            Close
-                        </Button>
-                        </DialogFooter>
-                    </DialogContent>
+                            {/* Fee Summary Cards */}
+                            <div className="grid grid-cols-3 gap-3">
+
+                                <div className="bg-purple-50 border p-4 rounded-xl text-center">
+                                <p className="text-xs text-gray-500">Total Fee</p>
+                                <p className="text-lg font-semibold text-purple-600">
+                                    ₹{totalFee.toLocaleString()}
+                                </p>
+                                </div>
+
+                                <div className="bg-green-50 border p-4 rounded-xl text-center">
+                                <p className="text-xs text-gray-500">Paid</p>
+                                <p className="text-lg font-semibold text-emerald-600">
+                                    ₹{paid.toLocaleString()}
+                                </p>
+                                </div>
+
+                                <div className="bg-red-50 border p-4 rounded-xl text-center">
+                                <p className="text-xs text-gray-500">Due</p>
+                                <p className="text-lg font-semibold text-red-600">
+                                    ₹{due.toLocaleString()}
+                                </p>
+                                </div>
+
+                            </div>
+
+                            {/* Progress */}
+                            <div className="space-y-2">
+                                <div className="flex justify-between text-sm">
+                                <span className="font-medium text-gray-700">Payment Progress</span>
+                                <span className="text-gray-500">{percentage.toFixed(0)}%</span>
+                                </div>
+
+                                <div className="w-full bg-gray-200 rounded-full h-3">
+                                <div
+                                    className="bg-indigo-500 h-3 rounded-full transition-all"
+                                    style={{ width: `${percentage}%` }}
+                                />
+                                </div>
+                            </div>
+
+                            {/* Status */}
+                            <div className="flex items-center justify-between">
+
+                                <p className="text-sm text-gray-600">
+                                Payment Status
+                                </p>
+
+                                <Badge
+                                className={`border ${
+                                    status === "Completed"
+                                    ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                                    : "bg-amber-100 text-amber-700 border-amber-200"
+                                }`}
+                                >
+                                {status}
+                                </Badge>
+
+                            </div>
+
+                            {/* Footer */}
+                            <div className="flex justify-end pt-2">
+                                <Button
+                                variant="outline"
+                                onClick={() => setViewDetail(null)}
+                                >
+                                Close
+                                </Button>
+                            </div>
+
+                            </div>
+                        </div>
+                        );
+                    })()}
+
+                </DialogContent>
                 </Dialog>
         </div>
     </AdminLayout>

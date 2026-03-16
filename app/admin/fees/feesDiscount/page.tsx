@@ -165,16 +165,18 @@ const Page = () => {
 
     <AdminLayout>
 
-      <div className="min-h-screen p-6 space-y-8 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 rounded-3xl">
+      <div className="min-h-screen p-8 space-y-8 bg-gradient-to-br from-slate-50 via-indigo-50 to-purple-50">
 
         {/* HEADER */}
 
-        <div className="flex justify-between items-center">
-
+        <div className="flex justify-between items-center bg-white/70 backdrop-blur-md p-6 rounded-2xl shadow-sm border">
+          
           <div>
-            <h1 className="text-3xl font-bold">Fees Discount</h1>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              Fee Discounts
+            </h1>
             <p className="text-sm text-gray-500">
-              Manage fee discounts
+              Manage all student fee discounts
             </p>
           </div>
 
@@ -184,7 +186,7 @@ const Page = () => {
 
             <DialogTrigger asChild>
 
-              <Button className="gap-2">
+              <Button className="gap-2 bg-indigo-600 hover:bg-indigo-700 shadow-md">
                 <Plus size={16} /> Add Discount
               </Button>
 
@@ -262,22 +264,22 @@ const Page = () => {
 
         {/* TABLE */}
 
-        <Card>
+        <Card className="rounded-2xl shadow-lg border bg-white/80 backdrop-blur-md">
 
-          <CardContent>
+          <CardContent className="p-6">
 
             <Table>
 
-              <TableHeader>
-                <TableRow>
-                  <TableHead>#</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Value</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Action</TableHead>
-                </TableRow>
-              </TableHeader>
+            <TableHeader>
+              <TableRow className="bg-gray-50">
+                <TableHead className="font-semibold">#</TableHead>
+                <TableHead className="font-semibold">Name</TableHead>
+                <TableHead className="font-semibold">Type</TableHead>
+                <TableHead className="font-semibold">Value</TableHead>
+                <TableHead className="font-semibold">Status</TableHead>
+                <TableHead className="font-semibold">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
 
               <TableBody>
 
@@ -297,7 +299,13 @@ const Page = () => {
 
                     <TableCell>
 
-                      <Badge>
+                      <Badge
+                        className={
+                          d.isActive
+                            ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
+                            : "bg-red-100 text-red-700 border border-red-200"
+                        }
+                      >
                         {d.isActive ? "Active" : "Inactive"}
                       </Badge>
 
@@ -305,17 +313,23 @@ const Page = () => {
 
                     <TableCell className="flex gap-2">
 
-                      <Button size="icon" variant="ghost"
-                        onClick={() => openEdit(d)}
-                      >
-                        <Edit size={16} />
-                      </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="hover:bg-indigo-100 text-indigo-600"
+                      onClick={() => openEdit(d)}
+                    >
+                      <Edit size={16} />
+                    </Button>
 
-                      <Button size="icon" variant="ghost"
-                        onClick={() => deleteDiscount(d.id)}
-                      >
-                        <Trash2 size={16} />
-                      </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="hover:bg-red-100 text-red-600"
+                      onClick={() => deleteDiscount(d.id)}
+                    >
+                      <Trash2 size={16} />
+                    </Button>
 
                     </TableCell>
 

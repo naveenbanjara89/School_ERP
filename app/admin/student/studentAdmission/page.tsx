@@ -80,11 +80,11 @@ interface StudentForm {
   fatherOccupation:string;
   motherOccupation:string;
   guardianRelation:string;
-  admissionFee: string;
-  tutionFee: string;
-  transportFee: string;
-  hostelFee: string;
-  otherFee: string;
+  admissionFee: number;
+  tutionFee: number;
+  transportFee: number;
+  hostelFee: number;
+  otherFee: number;
   discountType: string;
   discountValue: string;
   installments: number;
@@ -144,11 +144,11 @@ const Page = () => {
     fatherOccupation:"",
     motherOccupation:"",
     guardianRelation:"",
-    admissionFee: "",
-    tutionFee: "",
-    transportFee: "",
-    hostelFee: "",
-    otherFee: "",
+    admissionFee: 0,
+    tutionFee: 0,
+    transportFee: 0,
+    hostelFee: 0,
+    otherFee: 0,
     discountType: "",
     discountValue: "",
     installments: 1,
@@ -211,19 +211,6 @@ useEffect(() => {
   fetchSections();
 }, []);
 
-
-// const [formData, setFormData] = useState({
-//   admissionFee: "",
-//   tutionFee: "",
-//   transportFee: "",
-//   hostelFee: "",
-//   otherFee: "",
-//   discountType: "",
-//   discountValue: "",
-//   installments: "full",
-//   lateFinePerDay: "10",
-//   dueDate: "",
-// });
 
 const totalFees =
 Number(formData.admissionFee || 0) +
@@ -401,11 +388,11 @@ const fetchFeeStructure = async (branchId: string, classId: string) => {
 
     setFormData((prev) => ({
       ...prev,
-      admissionFee: fee.admissionFee || "",
-      tutionFee: fee.tutionFee || "",
-      transportFee: fee.transportFee || "",
-      hostelFee: fee.hostelFee || "",
-      otherFee: fee.otherFee || "",
+      admissionFee: fee.admissionFee || 0,
+      tutionFee: fee.tutionFee || 0,
+      transportFee: fee.transportFee || 0,
+      hostelFee: fee.hostelFee || 0,
+      otherFee: fee.otherFee || 0,
       dueDate: fee.dueDate || "",
       lateFinePerDay: fee.lateFinePerDay || "10",
     }));
@@ -488,11 +475,11 @@ useEffect(() => {
       fatherOccupation:"",
       motherOccupation:"",
       guardianRelation:"",
-      admissionFee: "",
-      tutionFee: "",
-      transportFee: "",
-      hostelFee: "",
-      otherFee: "",
+      admissionFee: 0,
+      tutionFee: 0,
+      transportFee: 0,
+      hostelFee: 0,
+      otherFee: 0,
       discountType: "",
       discountValue: "",
       installments: 1,
