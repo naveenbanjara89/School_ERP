@@ -70,7 +70,7 @@ const Page = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [totalPages, setTotalPages] = useState(1);
     const [pageNumber, setPageNumber] = useState(1);
-    const perPage = 5;
+    const perPage = 10;
 
     const [viewOpen, setViewOpen] = useState(false);
     const [editOpen, setEditOpen] = useState(false);
@@ -83,50 +83,50 @@ const Page = () => {
         description: "",
     });
 
-    // Open view modal
-    const handleView = (enquiry: any) => {
-    setSelectedEnquiry(enquiry);
-    setViewOpen(true);
-    };
+// Open view modal
+const handleView = (enquiry: any) => {
+setSelectedEnquiry(enquiry);
+setViewOpen(true);
+};
 
-    // Open edit modal
-    const handleEdit = (enquiry: any) => {
-    setSelectedEnquiry(enquiry);
-    setEditForm({
-        studentName: enquiry.studentName,
-        parentName: enquiry.parentName,
-        phone: enquiry.phone,
-        email: enquiry.email,
-        description: enquiry.description,
-    });
-    setEditOpen(true);
-    };
+// Open edit modal
+const handleEdit = (enquiry: any) => {
+setSelectedEnquiry(enquiry);
+setEditForm({
+    studentName: enquiry.studentName,
+    parentName: enquiry.parentName,
+    phone: enquiry.phone,
+    email: enquiry.email,
+    description: enquiry.description,
+});
+setEditOpen(true);
+};
 
-    // Handle changes in edit form
-    const handleEditChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setEditForm({ ...editForm, [e.target.name]: e.target.value });
-    };
+// Handle changes in edit form
+const handleEditChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+setEditForm({ ...editForm, [e.target.name]: e.target.value });
+};
 
-    // Save edited enquiry
-    const handleEditSave = async () => {
-    try {
-        await updateEnquiry(selectedEnquiry.id, editForm); // call API
-        setEditOpen(false);
-        fetchEnquiries(); // refresh table
-    } catch (error) {
-        console.error(error);
-    }
-    };
+// Save edited enquiry
+const handleEditSave = async () => {
+try {
+    await updateEnquiry(selectedEnquiry.id, editForm); // call API
+    setEditOpen(false);
+    fetchEnquiries(); // refresh table
+} catch (error) {
+    console.error(error);
+}
+};
 
 
 
-    const [form, setForm] = useState({
-        studentName: "",
-        parentName: "",
-        phone: "",
-        email: "",
-        description: "",
-    });
+const [form, setForm] = useState({
+    studentName: "",
+    parentName: "",
+    phone: "",
+    email: "",
+    description: "",
+});
 
 const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
   setForm({ ...form, [e.target.name]: e.target.value });
@@ -168,24 +168,26 @@ const handleDownload = async () => {
 };
 
 
-    const fetchEnquiries = async () => {
-        setLoading(true);
-        try {
-            const data = await getEnquiries({ name: searchTerm, page: pageNumber, perPage });
-            setEnquiries(data.data || []);
-            if (data.total) {
-            setTotalPages(Math.ceil(data.total / perPage));
-            }
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setLoading(false);
-        }
-    };
+const fetchEnquiries = async () => {
+    setLoading(true);
+    try {
+        const data = await getEnquiries({ 
+            name: searchTerm, 
+            page: pageNumber, 
+            perPage 
+        });
+        setEnquiries(data.data || []);
+        setTotalPages(data.pagination?.totalPages || 1);
+    } catch (error) {
+        console.error(error);
+    } finally {
+        setLoading(false);
+    }
+};
 
-    useEffect(() => {
-    fetchEnquiries();
-    }, [searchTerm, pageNumber]);
+useEffect(() => {
+fetchEnquiries();
+}, [searchTerm, pageNumber]);
 
   return (
     <AdminLayout>

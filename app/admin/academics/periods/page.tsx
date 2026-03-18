@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, BookOpen, Clock, Filter, GitBranch, Save } from "lucide-react";
 import { axiosInstance } from "@/apiHome/axiosInstanc";
 
 interface Period {
@@ -251,142 +251,270 @@ useEffect(() => {
     <AdminLayout>
       <div className="space-y-6">
 
-        {/* HEADER */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold">Period Management</h1>
-            <p className="text-muted-foreground">Configure and manage schedule periods</p>
+        {/* ================= HEADER ================= */}
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-5 mb-6">
+
+          {/* Title */}
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg">
+              <Clock className="text-white" size={20} />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                Period Management
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Configure and manage schedule periods
+              </p>
+            </div>
           </div>
 
-          <div className="flex gap-2">
-            <Button onClick={openAddDialog}>
-              <Plus className="w-4 h-4 mr-1" /> Add Period
-            </Button>
-          </div>
+          {/* Add Button */}
+          <Button
+            onClick={openAddDialog}
+            className="gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md hover:opacity-90"
+          >
+            <Plus className="w-4 h-4" />
+            Add Period
+          </Button>
         </div>
 
-        {/* FILTERS */}
-        <div className="flex gap-4">
+        {/* ================= FILTERS ================= */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-5">
 
-              <Select
-                value={selectedBranchId}
-                onValueChange={(value) => {
-                  setSelectedBranchId(value);
-                }}
-              >
-              <SelectTrigger className="w-64">
-              <SelectValue placeholder="All Branches" />
+          <div className="relative w-full sm:w-[260px]">
+            <Filter className="absolute left-3 top-3 text-muted-foreground" size={16} />
+            <Select
+              value={selectedBranchId}
+              onValueChange={(value) => {
+                setSelectedBranchId(value);
+              }}
+            >
+              <SelectTrigger className="pl-9">
+                <SelectValue placeholder="All Branches" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Branches</SelectItem>
                 {branches.map((branch) => (
-                    <SelectItem key={branch.id} value={branch.id}>
+                  <SelectItem key={branch.id} value={branch.id}>
                     {branch.name}
-                    </SelectItem>
+                  </SelectItem>
                 ))}
               </SelectContent>
-          </Select>
+            </Select>
+          </div>
+
         </div>
 
-        {/* TABLE */}
-        <Card>
+        {/* ================= TABLE ================= */}
+        <Card className="rounded-2xl border border-border/40 shadow-lg overflow-hidden">
 
-          <CardContent>
+          <CardContent className="p-0">
             <Table>
-              <TableHeader>
+
+              {/* Header */}
+              <TableHeader className="bg-gradient-to-r from-blue-500/10 to-indigo-500/10">
                 <TableRow>
                   <TableHead>#</TableHead>
                   <TableHead>Name</TableHead>
-                  <TableHead >Start</TableHead>
-                  <TableHead >End</TableHead>
+                  <TableHead>Start</TableHead>
+                  <TableHead>End</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
+
+              {/* Body */}
               <TableBody>
                 {periods.map((p, i) => (
-                  <TableRow key={p.id}>
-                    <TableCell>{i + 1}</TableCell>
-                    <TableCell>{p.name}</TableCell>
-                    <TableCell>{p.startTime.slice(11,16)}</TableCell>
-                    <TableCell>{p.endTime.slice(11,16)}</TableCell>
+                  <TableRow
+                    key={p.id}
+                    className="hover:bg-muted/50 transition-all duration-200"
+                  >
+
+                    {/* Index */}
+                    <TableCell className="font-medium text-muted-foreground">
+                      {i + 1}
+                    </TableCell>
+
+                    {/* Name */}
+                    <TableCell className="flex items-center gap-2 font-medium">
+                      <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-sm">
+                        <BookOpen size={14} />
+                      </div>
+                      {p.name}
+                    </TableCell>
+
+                    {/* Start Time */}
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Clock size={14} className="text-emerald-600" />
+                        {p.startTime.slice(11, 16)}
+                      </div>
+                    </TableCell>
+
+                    {/* End Time */}
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Clock size={14} className="text-rose-500" />
+                        {p.endTime.slice(11, 16)}
+                      </div>
+                    </TableCell>
+
+                    {/* Actions */}
                     <TableCell className="text-right flex gap-2 justify-end">
-                      <Button variant="ghost" size="icon" onClick={() => openEditDialog(p)}>
+
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => openEditDialog(p)}
+                        className="hover:bg-indigo-100 hover:text-indigo-600"
+                      >
                         <Pencil className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(p.id)}>
-                        <Trash2 className="w-4 h-4 text-destructive" />
+
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(p.id)}
+                        className="hover:bg-red-100 hover:text-red-600"
+                      >
+                        <Trash2 className="w-4 h-4" />
                       </Button>
+
                     </TableCell>
+
                   </TableRow>
                 ))}
               </TableBody>
+
             </Table>
           </CardContent>
         </Card>
 
-        {/* ADD/EDIT DIALOG */}
+        {/* ================= ADD / EDIT PERIOD DIALOG ================= */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{ editingPeriod ? "Edit Period" : "Add Period" }</DialogTitle>
+          <DialogContent className="sm:max-w-[420px] rounded-2xl overflow-hidden border border-border/40 shadow-xl">
+
+            {/* ===== Header ===== */}
+            <DialogHeader className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 py-4">
+              <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
+                {editingPeriod ? (
+                  <>
+                    <Pencil className="h-5 w-5" />
+                    Edit Period
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-5 w-5" />
+                    Add Period
+                  </>
+                )}
+              </DialogTitle>
             </DialogHeader>
 
-            <div className="space-y-4">
-              <div className="space-y-1">
+            {/* ===== Form ===== */}
+            <div className="space-y-5 px-6 py-5">
+
+              {/* Name */}
+              <div>
                 <Label>Name</Label>
-                <Input
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                />
+                <div className="relative mt-1">
+                  <BookOpen className="absolute left-3 top-3 text-muted-foreground" size={16} />
+                  <Input
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                    className="pl-9 focus:ring-2 focus:ring-blue-400"
+                  />
+                </div>
               </div>
 
-              <div className="grid gap-2">
-              <Label>Branch</Label>
-              <Select
-              value={selectedBranchId}
-                onValueChange={(value) => {
-                  setSelectedBranchId(value);
-                  setSelectedSectionId("");
-                }}
-              >
-                  <SelectTrigger>
-                  <SelectValue placeholder="Select Branch" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {branches.map((branch) => (
+              {/* Branch */}
+              <div>
+                <Label>Branch</Label>
+                <div className="relative mt-1">
+                  <GitBranch className="absolute left-3 top-3 text-muted-foreground" size={16} />
+                  <Select
+                    value={selectedBranchId}
+                    onValueChange={(value) => {
+                      setSelectedBranchId(value);
+                      setSelectedSectionId("");
+                    }}
+                  >
+                    <SelectTrigger className="pl-9">
+                      <SelectValue placeholder="Select Branch" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {branches.map((branch) => (
                         <SelectItem key={branch.id} value={branch.id}>
-                        {branch.name}
+                          {branch.name}
                         </SelectItem>
-                    ))}
-                  </SelectContent>
-              </Select>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              {/* Time Inputs */}
+              <div className="grid grid-cols-2 gap-4">
+
+                {/* Start Time */}
                 <div>
                   <Label>Start Time</Label>
-                  <Input
-                    type="time"
-                    value={formData.startTime}
-                    onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                  />
+                  <div className="relative mt-1">
+                    <Clock className="absolute left-3 top-3 text-emerald-600" size={16} />
+                    <Input
+                      type="time"
+                      value={formData.startTime}
+                      onChange={(e) =>
+                        setFormData({ ...formData, startTime: e.target.value })
+                      }
+                      className="pl-9 focus:ring-2 focus:ring-emerald-400"
+                    />
+                  </div>
                 </div>
 
+                {/* End Time */}
                 <div>
                   <Label>End Time</Label>
-                  <Input
-                    type="time"
-                    value={formData.endTime}
-                    onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                  />
+                  <div className="relative mt-1">
+                    <Clock className="absolute left-3 top-3 text-rose-500" size={16} />
+                    <Input
+                      type="time"
+                      value={formData.endTime}
+                      onChange={(e) =>
+                        setFormData({ ...formData, endTime: e.target.value })
+                      }
+                      className="pl-9 focus:ring-2 focus:ring-rose-400"
+                    />
+                  </div>
                 </div>
+
               </div>
             </div>
 
-            <DialogFooter className="space-x-2">
-              <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button onClick={handleSave}>{ editingPeriod ? "Update" : "Add" }</Button>
+            {/* ===== Footer ===== */}
+            <DialogFooter className="px-6 pb-5 flex justify-end gap-2">
+
+              <Button
+                variant="outline"
+                onClick={() => setDialogOpen(false)}
+                className="rounded-lg"
+              >
+                Cancel
+              </Button>
+
+              <Button
+                onClick={handleSave}
+                className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md hover:opacity-90 flex items-center gap-2"
+              >
+                <Save className="h-4 w-4" />
+                {editingPeriod ? "Update" : "Add"}
+              </Button>
+
             </DialogFooter>
+
           </DialogContent>
         </Dialog>
 

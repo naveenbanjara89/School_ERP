@@ -26,6 +26,8 @@ import {
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { axiosInstance } from "@/apiHome/axiosInstanc";
+import { BookOpen, Check, ChevronLeft, ChevronRight, FileText, Hash, List, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 
 interface Subject {
   id: number;
@@ -208,49 +210,105 @@ const Subjects = () => {
     <AdminLayout>
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <h1 className="text-2xl font-semibold">Subjects</h1>
+
+        {/* Title */}
+        <div>
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 bg-clip-text text-transparent">
+            Subjects
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Manage and organize subjects
+          </p>
+        </div>
+
+        {/* Add Subject */}
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button>Add Subject</Button>
+            <Button className="flex items-center gap-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:to-pink-600 text-white shadow-lg rounded-xl px-5 py-2 transition-all">
+              <Plus className="w-4 h-4" />
+              Add Subject
+            </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Add New Subject</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
+
+          <DialogContent className="sm:max-w-md p-0 rounded-2xl overflow-hidden shadow-2xl">
+
+            {/* Header */}
+            <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 px-6 py-4">
+              <DialogHeader>
+                <DialogTitle className="text-white text-lg font-semibold">
+                  Add New Subject
+                </DialogTitle>
+              </DialogHeader>
+            </div>
+
+            {/* Body */}
+            <div className="px-6 py-5 bg-gradient-to-br from-white via-indigo-50/40 to-purple-50/40 space-y-4">
+
+              {/* Name */}
               <div className="space-y-2">
                 <Label>Name *</Label>
-                <Input
-                  value={newSubject.name || ""}
-                  onChange={(e) =>
-                    setNewSubject({ ...newSubject, name: e.target.value })
-                  }
-                />
+                <div className="relative">
+                  <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input
+                    value={newSubject.name || ""}
+                    onChange={(e) =>
+                      setNewSubject({ ...newSubject, name: e.target.value })
+                    }
+                    className="pl-10 rounded-xl border-gray-200 focus:ring-2 focus:ring-indigo-400"
+                    placeholder="Subject name"
+                  />
+                </div>
               </div>
+
+              {/* Code */}
               <div className="space-y-2">
                 <Label>Code *</Label>
-                <Input
-                  value={newSubject.code || ""}
-                  onChange={(e) =>
-                    setNewSubject({ ...newSubject, code: e.target.value })
-                  }
-                />
+                <div className="relative">
+                  <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input
+                    value={newSubject.code || ""}
+                    onChange={(e) =>
+                      setNewSubject({ ...newSubject, code: e.target.value })
+                    }
+                    className="pl-10 rounded-xl border-gray-200 focus:ring-2 focus:ring-purple-400"
+                    placeholder="e.g. MATH101"
+                  />
+                </div>
               </div>
+
+              {/* Description */}
               <div className="space-y-2">
                 <Label>Description</Label>
-                <Input
-                  value={newSubject.description || ""}
-                  onChange={(e) =>
-                    setNewSubject({ ...newSubject, description: e.target.value })
-                  }
-                />
+                <div className="relative">
+                  <FileText className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                  <Input
+                    value={newSubject.description || ""}
+                    onChange={(e) =>
+                      setNewSubject({ ...newSubject, description: e.target.value })
+                    }
+                    className="pl-10 rounded-xl border-gray-200 focus:ring-2 focus:ring-pink-400"
+                    placeholder="Short description"
+                  />
+                </div>
               </div>
+
             </div>
-            <DialogFooter className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+
+            {/* Footer */}
+            <DialogFooter className="flex justify-between px-6 py-4 border-t bg-white">
+              <Button
+                variant="ghost"
+                onClick={() => setIsAddDialogOpen(false)}
+                className="hover:bg-gray-100"
+              >
                 Cancel
               </Button>
-              <Button onClick={handleAddSubject}>Add</Button>
+              <Button
+                onClick={handleAddSubject}
+                className="bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-lg px-6 shadow-md hover:from-emerald-600"
+              >
+                Add
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -258,48 +316,86 @@ const Subjects = () => {
 
       {/* Search + perPage */}
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
-        <Input
-          placeholder="Search by name or code..."
-          value={searchQuery}
-          onChange={(e) => handleSearch(e.target.value)}
-          className="flex-1"
-        />
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Per Page:</span>
-          <select
-            value={pagination.perPage}
-            onChange={handlePerPageChange}
-            className="border rounded px-2 py-1"
-          >
-            {[5, 10, 20, 50].map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
+
+        {/* Search */}
+        <div className="relative flex-1 w-full">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Input
+            placeholder="Search by name or code..."
+            value={searchQuery}
+            onChange={(e) => handleSearch(e.target.value)}
+            className="pl-10 rounded-xl border-gray-200 focus:ring-2 focus:ring-indigo-400"
+          />
         </div>
+
+        {/* Per Page */}
+        <div className="flex items-center gap-2 bg-white shadow-sm border rounded-xl px-3 py-2">
+          <List className="w-4 h-4 text-indigo-500" />
+          <span className="text-sm text-muted-foreground">Per Page</span>
+
+          <Select value={pagination.perPage.toString()} onValueChange={(v) => handlePerPageChange({ target: { value: v } })}>
+            <SelectTrigger className="w-[80px] border-none shadow-none focus:ring-0">
+              {/* <SelectValue /> */}
+            </SelectTrigger>
+            <SelectContent>
+              {[5, 10, 20, 50].map((n) => (
+                <SelectItem key={n} value={n.toString()}>
+                  {n}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
       </div>
 
       {/* Table */}
-      <div className="border rounded-lg overflow-x-auto">
+      <div className="rounded-xl border bg-gradient-to-br from-white via-indigo-50/30 to-purple-50/30 shadow-md overflow-hidden">
+
         <Table>
+          {/* Header */}
           <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Code</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead className="w-[150px]">Actions</TableHead>
+            <TableRow className="bg-gradient-to-r from-indigo-500/10 to-purple-500/10">
+              <TableHead className="font-semibold text-gray-700">Name</TableHead>
+              <TableHead className="font-semibold text-gray-700">Code</TableHead>
+              <TableHead className="font-semibold text-gray-700">Description</TableHead>
+              <TableHead className="w-[160px] text-right font-semibold text-gray-700">
+                Actions
+              </TableHead>
             </TableRow>
           </TableHeader>
+
           <TableBody>
             {subjects.length > 0 ? (
               subjects.map((subject) => (
-                <TableRow key={subject.id}>
-                  <TableCell>{subject.name}</TableCell>
-                  <TableCell>{subject.code}</TableCell>
-                  <TableCell>{subject.description || "—"}</TableCell>
+                <TableRow
+                  key={subject.id}
+                  className="hover:bg-indigo-50/40 transition-colors"
+                >
+                  {/* Name */}
+                  <TableCell className="font-medium text-gray-800">
+                    {subject.name}
+                  </TableCell>
+
+                  {/* Code Badge */}
                   <TableCell>
-                    <div className="flex gap-2">
+                    <span className="px-3 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-700">
+                      {subject.code}
+                    </span>
+                  </TableCell>
+
+                  {/* Description */}
+                  <TableCell className="text-gray-600 max-w-[250px] truncate">
+                    {subject.description || (
+                      <span className="italic text-gray-400">No description</span>
+                    )}
+                  </TableCell>
+
+                  {/* Actions */}
+                  <TableCell>
+                    <div className="flex justify-end gap-2">
+
+                      {/* Edit */}
                       <Button
                         size="sm"
                         onClick={() => {
@@ -307,24 +403,40 @@ const Subjects = () => {
                           setEditingSubjectId(subject.id);
                           setIsEditDialogOpen(true);
                         }}
+                        className="flex items-center gap-1 bg-blue-500 hover:bg-blue-600 text-white rounded-lg px-3 shadow-sm"
                       >
+                        <Pencil className="w-4 h-4" />
                         Edit
                       </Button>
+
+                      {/* Delete */}
                       <Button
                         size="sm"
                         variant="destructive"
                         onClick={() => handleDeleteSubject(subject.id)}
+                        className="flex items-center gap-1 rounded-lg px-3 shadow-sm"
                       >
+                        <Trash2 className="w-4 h-4" />
                         Delete
                       </Button>
+
                     </div>
                   </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-4">
-                  No subjects found.
+                <TableCell colSpan={4} className="py-10 text-center">
+                  <div className="flex flex-col items-center justify-center gap-2 text-gray-500">
+
+                    <BookOpen className="w-8 h-8 text-gray-300" />
+
+                    <p className="text-sm font-medium">No subjects found</p>
+                    <p className="text-xs text-muted-foreground">
+                      Try adding a new subject or adjusting your search
+                    </p>
+
+                  </div>
                 </TableCell>
               </TableRow>
             )}
@@ -333,74 +445,146 @@ const Subjects = () => {
       </div>
 
       {/* Pagination Controls */}
-      <div className="flex justify-between items-center mt-4">
-        <span className="text-sm text-muted-foreground">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6 p-4 rounded-xl border bg-gradient-to-r from-white via-indigo-50/40 to-purple-50/40 shadow-sm">
+
+        {/* Info */}
+        <span className="text-sm text-gray-600">
           Showing{" "}
-          {subjects.length
-            ? (pagination.currentPage - 1) * pagination.perPage + 1
-            : 0}{" "}
+          <span className="font-semibold text-indigo-600">
+            {subjects.length
+              ? (pagination.currentPage - 1) * pagination.perPage + 1
+              : 0}
+          </span>{" "}
           to{" "}
-          {(pagination.currentPage - 1) * pagination.perPage + subjects.length} of{" "}
-          {pagination.totalSubjects} subjects
+          <span className="font-semibold text-indigo-600">
+            {(pagination.currentPage - 1) * pagination.perPage + subjects.length}
+          </span>{" "}
+          of{" "}
+          <span className="font-semibold text-purple-600">
+            {pagination.totalSubjects}
+          </span>{" "}
+          subjects
         </span>
-        <div className="flex gap-2">
+
+        {/* Controls */}
+        <div className="flex items-center gap-2">
+
+          {/* Previous */}
           <Button
-            variant="outline"
             onClick={() => goToPage(pagination.currentPage - 1)}
             disabled={pagination.currentPage === 1}
+            className="flex items-center gap-1 rounded-full px-4 bg-white border shadow-sm hover:bg-indigo-50 disabled:opacity-50"
           >
-            Previous
+            <ChevronLeft className="w-4 h-4" />
+            Prev
           </Button>
+
+          {/* Current Page Badge */}
+          <div className="px-4 py-1 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-sm font-semibold shadow">
+            Page {pagination.currentPage} / {pagination.totalPages}
+          </div>
+
+          {/* Next */}
           <Button
-            variant="outline"
             onClick={() => goToPage(pagination.currentPage + 1)}
             disabled={pagination.currentPage === pagination.totalPages}
+            className="flex items-center gap-1 rounded-full px-4 bg-white border shadow-sm hover:bg-purple-50 disabled:opacity-50"
           >
             Next
+            <ChevronRight className="w-4 h-4" />
           </Button>
+
         </div>
       </div>
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit Subject</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
+        <DialogContent className="sm:max-w-md h-[85vh] p-0 rounded-2xl overflow-hidden shadow-2xl flex flex-col">
+
+          {/* Header */}
+          <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 px-6 py-4">
+            <DialogHeader>
+              <DialogTitle className="text-white text-lg font-semibold">
+                Edit Subject
+              </DialogTitle>
+              <p className="text-xs text-white/80">
+                Update subject details
+              </p>
+            </DialogHeader>
+          </div>
+
+          {/* Scrollable Body */}
+          <div className="flex-1 overflow-y-auto px-6 py-5 bg-gradient-to-br from-white via-indigo-50/40 to-purple-50/40 space-y-4">
+
+            {/* Name */}
             <div className="space-y-2">
               <Label>Name *</Label>
-              <Input
-                value={editSubject.name || ""}
-                onChange={(e) =>
-                  setEditSubject({ ...editSubject, name: e.target.value })
-                }
-              />
+              <div className="relative">
+                <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input
+                  value={editSubject.name || ""}
+                  onChange={(e) =>
+                    setEditSubject({ ...editSubject, name: e.target.value })
+                  }
+                  className="pl-10 rounded-xl border-gray-200 focus:ring-2 focus:ring-indigo-400"
+                  placeholder="Subject name"
+                />
+              </div>
             </div>
+
+            {/* Code */}
             <div className="space-y-2">
               <Label>Code *</Label>
-              <Input
-                value={editSubject.code || ""}
-                onChange={(e) =>
-                  setEditSubject({ ...editSubject, code: e.target.value })
-                }
-              />
+              <div className="relative">
+                <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input
+                  value={editSubject.code || ""}
+                  onChange={(e) =>
+                    setEditSubject({ ...editSubject, code: e.target.value })
+                  }
+                  className="pl-10 rounded-xl border-gray-200 focus:ring-2 focus:ring-purple-400"
+                  placeholder="e.g. MATH101"
+                />
+              </div>
             </div>
+
+            {/* Description */}
             <div className="space-y-2">
               <Label>Description</Label>
-              <Input
-                value={editSubject.description || ""}
-                onChange={(e) =>
-                  setEditSubject({ ...editSubject, description: e.target.value })
-                }
-              />
+              <div className="relative">
+                <FileText className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                <Input
+                  value={editSubject.description || ""}
+                  onChange={(e) =>
+                    setEditSubject({ ...editSubject, description: e.target.value })
+                  }
+                  className="pl-10 rounded-xl border-gray-200 focus:ring-2 focus:ring-pink-400"
+                  placeholder="Short description"
+                />
+              </div>
             </div>
+
           </div>
-          <DialogFooter className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+
+          {/* Footer */}
+          <DialogFooter className="flex justify-between items-center px-6 py-4 border-t bg-white">
+
+            <Button
+              variant="ghost"
+              onClick={() => setIsEditDialogOpen(false)}
+              className="hover:bg-gray-100 rounded-lg"
+            >
               Cancel
             </Button>
-            <Button onClick={handleEditSubject}>Update</Button>
+
+            <Button
+              onClick={handleEditSubject}
+              className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 text-white rounded-lg px-6 shadow-md"
+            >
+              <Check className="w-4 h-4" />
+              Update
+            </Button>
+
           </DialogFooter>
         </DialogContent>
       </Dialog>

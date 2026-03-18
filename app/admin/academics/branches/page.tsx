@@ -5,7 +5,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, Plus, MoreHorizontal, MapPin } from "lucide-react";
+import { Search, Plus, MoreHorizontal, MapPin, Building2, Phone, Mail } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -234,44 +234,99 @@ const Branches = () => {
 
   return (
     <AdminLayout>
-      <div className="flex justify-between mb-6">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-5 mb-8">
+
+        {/* Header */}
         <div>
-          <h1 className="text-2xl font-semibold">Branches</h1>
-          <p className="text-muted-foreground">Manage school branches</p>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            Branches
+          </h1>
+          <p className="text-gray-500 text-sm mt-1">
+            Manage school branches
+          </p>
         </div>
 
+        {/* Add Branch */}
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" /> Add Branch
+            <Button className="flex items-center gap-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:to-pink-600 text-white shadow-xl rounded-xl px-5 py-2 transition-all duration-300">
+              <Plus className="w-4 h-4" /> Add Branch
             </Button>
           </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add Branch</DialogTitle>
-            </DialogHeader>
-            <BranchForm form={branchForm} setForm={setBranchForm} schools={schools} />
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
+
+          <DialogContent className="sm:max-w-[650px] h-[90vh] p-0 rounded-2xl overflow-hidden border border-gray-200 shadow-2xl flex flex-col">
+
+            {/* Header */}
+            <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 px-6 py-4 flex items-center justify-between shadow-md">
+              <DialogHeader>
+                <DialogTitle className="text-white text-lg font-semibold tracking-wide">
+                  Add Branch
+                </DialogTitle>
+                <p className="text-xs text-white/80">
+                  Fill in the details to create a new branch
+                </p>
+              </DialogHeader>
+            </div>
+
+            {/* Scrollable Form Area */}
+            <div className="flex-1 overflow-y-auto px-6 py-5 bg-gradient-to-br from-white via-indigo-50/40 to-purple-50/40 backdrop-blur-sm">
+
+              {/* Optional top glow card */}
+              <div className="bg-white rounded-xl shadow-md p-4 border border-gray-100">
+                <BranchForm
+                  form={branchForm}
+                  setForm={setBranchForm}
+                  schools={schools}
+                />
+              </div>
+
+            </div>
+
+            {/* Footer */}
+            <DialogFooter className="flex justify-between items-center px-6 py-4 border-t bg-white">
+
+              <Button
+                variant="ghost"
+                onClick={() => setIsCreateOpen(false)}
+                className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
+              >
                 Cancel
               </Button>
-              <Button onClick={handleCreateBranch}>Create</Button>
+
+              <Button
+                onClick={handleCreateBranch}
+                className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-lg px-6 shadow-lg transition-all duration-300"
+              >
+                Create Branch
+              </Button>
+
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
 
-      <div className="flex gap-4 mb-4">
-        <Input
-          placeholder="Search branches..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
+      {/* Filters Section */}
+      <div className="flex flex-col lg:flex-row gap-4 mb-6 bg-white/60 backdrop-blur-md border border-gray-200 shadow-sm rounded-2xl p-4">
+
+        {/* Search */}
+        <div className="relative flex-1 group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-indigo-500 transition" />
+
+          <Input
+            placeholder="Search branches..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-11 rounded-xl border-gray-200 bg-white/80 focus:bg-white focus:ring-2 focus:ring-indigo-400 shadow-sm"
+          />
+        </div>
+
+        {/* School Filter */}
         <Select value={schoolFilter} onValueChange={setSchoolFilter}>
-          <SelectTrigger className="w-[220px]">
+          <SelectTrigger className="w-full lg:w-[220px] rounded-xl border-gray-200 bg-white/80 shadow-sm hover:border-indigo-400 focus:ring-2 focus:ring-indigo-400">
             <SelectValue placeholder="School" />
           </SelectTrigger>
-          <SelectContent>
+
+          <SelectContent className="rounded-xl shadow-lg">
             <SelectItem value="all">All Schools</SelectItem>
             {schools.map((s) => (
               <SelectItem key={s.id} value={s.id.toString()}>
@@ -280,11 +335,20 @@ const Branches = () => {
             ))}
           </SelectContent>
         </Select>
-        <Select value={itemsPerPage.toString()} onValueChange={(v) => {setItemsPerPage(Number(v)); setCurrentPage(1);}}>
-          <SelectTrigger className="w-[120px]">
+
+        {/* Items Per Page */}
+        <Select
+          value={itemsPerPage.toString()}
+          onValueChange={(v) => {
+            setItemsPerPage(Number(v));
+            setCurrentPage(1);
+          }}
+        >
+          <SelectTrigger className="w-full lg:w-[140px] rounded-xl border-gray-200 bg-white/80 shadow-sm hover:border-indigo-400 focus:ring-2 focus:ring-indigo-400">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+
+          <SelectContent className="rounded-lg shadow-md">
             {[5, 10, 20].map((size) => (
               <SelectItem key={size} value={size.toString()}>
                 {size} per page
@@ -292,43 +356,81 @@ const Branches = () => {
             ))}
           </SelectContent>
         </Select>
+
       </div>
 
-      <div className="border rounded-lg">
+      <div className="rounded-2xl border border-gray-200 bg-white/70 backdrop-blur-md shadow-md overflow-hidden">
+
         <Table>
+          {/* Header */}
           <TableHeader>
-            <TableRow>
-              <TableHead>Branch</TableHead>
-              <TableHead>School</TableHead>
-              <TableHead>City</TableHead>
+            <TableRow className="bg-gradient-to-r from-indigo-50 to-purple-50">
+              <TableHead className="text-gray-700 font-semibold">Branch</TableHead>
+              <TableHead className="text-gray-700 font-semibold">School</TableHead>
+              <TableHead className="text-gray-700 font-semibold">City</TableHead>
+              <TableHead className="text-gray-700 font-semibold text-end">Action</TableHead>
               <TableHead className="w-[50px]" />
             </TableRow>
           </TableHeader>
+
+          {/* Body */}
           <TableBody>
             {branches.map((branch) => (
-              <TableRow key={branch.id}>
-                <TableCell>{branch.name}</TableCell>
-                <TableCell>{branch.school?.name}</TableCell>
+              <TableRow
+                key={branch.id}
+                className="group hover:bg-gradient-to-r hover:from-indigo-50/40 hover:to-purple-50/40 transition-all duration-200"
+              >
+                {/* Branch */}
                 <TableCell>
-                  <MapPin className="inline w-4 h-4 mr-1" />
-                  {branch.city}
+                  <p className="font-semibold text-gray-800 group-hover:text-indigo-600 transition">
+                    {branch.name}
+                  </p>
                 </TableCell>
+
+                {/* School */}
                 <TableCell>
+                  <span className="text-gray-600 font-medium">
+                    {branch.school?.name}
+                  </span>
+                </TableCell>
+
+                {/* City */}
+                <TableCell>
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <MapPin className="w-4 h-4 text-indigo-500" />
+                    <span className="text-sm">{branch.city}</span>
+                  </div>
+                </TableCell>
+
+                {/* Actions */}
+                <TableCell className="flex justify-end">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button size="icon" variant="ghost">
-                        <MoreHorizontal />
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="rounded-full hover:bg-indigo-100 transition"
+                      >
+                        <MoreHorizontal className="w-4 h-4 text-gray-600" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => openEdit(branch.id)}>
-                        Edit
-                      </DropdownMenuItem>
+
+                    <DropdownMenuContent
+                      align="end"
+                      className="rounded-xl shadow-lg border border-gray-100"
+                    >
                       <DropdownMenuItem
-                        className="text-destructive"
+                        className="hover:bg-indigo-50 cursor-pointer"
+                        onClick={() => openEdit(branch.id)}
+                      >
+                        ✏️ Edit
+                      </DropdownMenuItem>
+
+                      <DropdownMenuItem
+                        className="hover:bg-red-50 text-red-600 cursor-pointer"
                         onClick={() => handleDeleteBranch(branch.id)}
                       >
-                        Delete
+                        🗑 Delete
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -340,51 +442,113 @@ const Branches = () => {
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between mt-4">
-        <p className="text-sm text-muted-foreground">
-          Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-          {Math.min(currentPage * itemsPerPage, totalBranches)} of {totalBranches} branches
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 px-4 py-3 rounded-2xl border border-gray-200 bg-gradient-to-r from-indigo-50/60 to-purple-50/60 shadow-sm">
+
+        {/* Left Text */}
+        <p className="text-sm text-gray-600 font-medium">
+          Showing{" "}
+          <span className="font-semibold text-gray-800">
+            {(currentPage - 1) * itemsPerPage + 1}
+          </span>{" "}
+          to{" "}
+          <span className="font-semibold text-gray-800">
+            {Math.min(currentPage * itemsPerPage, totalBranches)}
+          </span>{" "}
+          of{" "}
+          <span className="font-semibold text-indigo-600">
+            {totalBranches}
+          </span>{" "}
+          branches
         </p>
+
+        {/* Pagination Controls */}
         <Pagination>
-          <PaginationContent>
+          <PaginationContent className="flex items-center gap-1">
+
+            {/* Previous */}
             <PaginationItem>
               <PaginationPrevious
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                className={`rounded-lg transition ${
+                  currentPage === 1
+                    ? "pointer-events-none opacity-40"
+                    : "cursor-pointer hover:bg-indigo-100"
+                }`}
               />
             </PaginationItem>
+
+            {/* Pages */}
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
               <PaginationItem key={page}>
                 <PaginationLink
                   onClick={() => setCurrentPage(page)}
                   isActive={currentPage === page}
-                  className="cursor-pointer"
+                  className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-all ${
+                    currentPage === page
+                      ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md"
+                      : "hover:bg-indigo-100 text-gray-700 cursor-pointer"
+                  }`}
                 >
                   {page}
                 </PaginationLink>
               </PaginationItem>
             ))}
+
+            {/* Next */}
             <PaginationItem>
               <PaginationNext
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
+                className={`rounded-lg transition ${
+                  currentPage === totalPages
+                    ? "pointer-events-none opacity-40"
+                    : "cursor-pointer hover:bg-indigo-100"
+                }`}
               />
             </PaginationItem>
+
           </PaginationContent>
         </Pagination>
       </div>
 
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Branch</DialogTitle>
-          </DialogHeader>
-          <BranchForm form={branchForm} setForm={setBranchForm} schools={schools} />
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditOpen(false)}>
+        <DialogContent className="sm:max-w-[650px] rounded-2xl shadow-2xl border border-gray-200 p-0 overflow-hidden">
+
+          {/* Header */}
+          <div className="bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-4">
+            <DialogHeader>
+              <DialogTitle className="text-white text-lg font-semibold">
+                Edit Branch
+              </DialogTitle>
+            </DialogHeader>
+          </div>
+
+          {/* Scrollable Form */}
+          <div className="max-h-[70vh] overflow-y-auto px-6 py-5 bg-white/70 backdrop-blur-sm">
+            <BranchForm
+              form={branchForm}
+              setForm={setBranchForm}
+              schools={schools}
+            />
+          </div>
+
+          {/* Footer */}
+          <DialogFooter className="flex justify-end gap-3 px-6 py-4 border-t bg-white sticky bottom-0">
+            <Button
+              variant="outline"
+              onClick={() => setIsEditOpen(false)}
+              className="rounded-lg hover:bg-gray-100"
+            >
               Cancel
             </Button>
-            <Button onClick={handleUpdateBranch}>Update</Button>
+
+            <Button
+              onClick={handleUpdateBranch}
+              className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white rounded-lg px-6 shadow-md"
+            >
+              Update
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -393,44 +557,117 @@ const Branches = () => {
 };
 
 const BranchForm = ({ form, setForm, schools }: any) => (
-  <div className="grid gap-3 py-4">
-    <Input
-      placeholder="Branch name"
-      value={form.name}
-      onChange={(e) => setForm({ ...form, name: e.target.value })}
-    />
-    <Select value={form.schoolId} onValueChange={(v) => setForm({ ...form, schoolId: v })}>
-      <SelectTrigger>
-        <SelectValue placeholder="Select school" />
-      </SelectTrigger>
-      <SelectContent>
-        {schools.map((s: School) => (
-          <SelectItem key={s.id} value={s.id.toString()}>
-            {s.name}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-    <Textarea
-      placeholder="Address"
-      value={form.address}
-      onChange={(e) => setForm({ ...form, address: e.target.value })}
-    />
-    <Input
-      placeholder="City"
-      value={form.city}
-      onChange={(e) => setForm({ ...form, city: e.target.value })}
-    />
-    <Input
-      placeholder="Phone"
-      value={form.phone}
-      onChange={(e) => setForm({ ...form, phone: e.target.value })}
-    />
-    <Input
-      placeholder="Email"
-      value={form.email}
-      onChange={(e) => setForm({ ...form, email: e.target.value })}
-    />
+  <div className="space-y-6 py-4">
+
+    {/* Section: Basic Info */}
+    <div className="space-y-4">
+      <h3 className="text-sm font-semibold text-indigo-600 tracking-wide uppercase">
+        Basic Information
+      </h3>
+
+      {/* Branch Name */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-gray-700">Branch Name</label>
+        <div className="relative">
+          <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Input
+            placeholder="Branch name"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            className="pl-10 rounded-xl border-gray-200 focus:ring-2 focus:ring-indigo-400 bg-white/80"
+          />
+        </div>
+      </div>
+
+      {/* School Select */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-gray-700">Select School</label>
+        <Select
+          value={form.schoolId}
+          onValueChange={(v) => setForm({ ...form, schoolId: v })}
+        >
+          <SelectTrigger className="rounded-xl border-gray-200 bg-white/80 focus:ring-2 focus:ring-indigo-400">
+            <SelectValue placeholder="Select school" />
+          </SelectTrigger>
+
+          <SelectContent className="rounded-xl shadow-lg">
+            {schools.map((s: School) => (
+              <SelectItem key={s.id} value={s.id.toString()}>
+                {s.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+
+    {/* Section: Location */}
+    <div className="space-y-4">
+      <h3 className="text-sm font-semibold text-purple-600 tracking-wide uppercase">
+        Location Details
+      </h3>
+
+      {/* Address */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-gray-700">Address</label>
+        <Textarea
+          placeholder="Enter full address"
+          value={form.address}
+          onChange={(e) => setForm({ ...form, address: e.target.value })}
+          className="rounded-xl border-gray-200 focus:ring-2 focus:ring-purple-400 bg-white/80"
+        />
+      </div>
+
+      {/* City */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-gray-700">City</label>
+        <div className="relative">
+          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Input
+            placeholder="City"
+            value={form.city}
+            onChange={(e) => setForm({ ...form, city: e.target.value })}
+            className="pl-10 rounded-xl border-gray-200 focus:ring-2 focus:ring-purple-400 bg-white/80"
+          />
+        </div>
+      </div>
+    </div>
+
+    {/* Section: Contact */}
+    <div className="space-y-4">
+      <h3 className="text-sm font-semibold text-emerald-600 tracking-wide uppercase">
+        Contact Details
+      </h3>
+
+      {/* Phone */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-gray-700">Phone</label>
+        <div className="relative">
+          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Input
+            placeholder="Phone number"
+            value={form.phone}
+            onChange={(e) => setForm({ ...form, phone: e.target.value })}
+            className="pl-10 rounded-xl border-gray-200 focus:ring-2 focus:ring-emerald-400 bg-white/80"
+          />
+        </div>
+      </div>
+
+      {/* Email */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-gray-700">Email</label>
+        <div className="relative">
+          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Input
+            placeholder="Email address"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            className="pl-10 rounded-xl border-gray-200 focus:ring-2 focus:ring-emerald-400 bg-white/80"
+          />
+        </div>
+      </div>
+    </div>
+
   </div>
 );
 

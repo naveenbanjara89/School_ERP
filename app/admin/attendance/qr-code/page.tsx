@@ -27,7 +27,7 @@ import {
 import { Label } from "@/components/ui/label";
 import {
   QrCode, RefreshCw, Download, CheckCircle, XCircle, Clock,
-  TrendingUp, Scan, Smartphone, Monitor, Copy
+  TrendingUp, Scan, Smartphone, Monitor
 } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import html2canvas from "html2canvas";
@@ -47,7 +47,13 @@ const Page = () => {
 
   const [recentScans, setRecentScans] = useState<any[]>([]);
   const [loadingScans, setLoadingScans] = useState(false);
-  const [template, setTemplate] = useState("");
+
+  const [templates, setTemplates] = useState<any[]>([])
+  const [selectedTemplateId, setSelectedTemplateId] = useState("")
+  const [selectedTemplate, setSelectedTemplate] = useState<any>(null)
+  const [generatedCard, setGeneratedCard] = useState("")
+
+   const [student, setStudent] = useState([])
 
   // **Live Attendance Stats**
   const [stats, setStats] = useState<any[]>([]);
@@ -64,27 +70,6 @@ const Page = () => {
     link.download = "qr-code.png"
     link.href = canvas.toDataURL()
     link.click()
-  }
-
-  /* Copy QR */
-  const copyQR = async () => {
-    if (!qrRef.current) return
-
-    const canvas = await html2canvas(qrRef.current)
-    canvas.toBlob(async (blob) => {
-      if (!blob) return
-      const item = new ClipboardItem({ "image/png": blob })
-      await navigator.clipboard.write([item])
-      alert("QR copied!")
-    })
-  }
-
-  /* Fullscreen */
-  const fullscreenQR = () => {
-    if (!qrRef.current) return
-    if (qrRef.current.requestFullscreen) {
-      qrRef.current.requestFullscreen()
-    }
   }
 
 
@@ -135,9 +120,11 @@ const generateQR = async () => {
     const res = await axiosInstance.post("/api/v1/attendance/qr", {
       userId: userId,
     })
+    console.log(res);
 
     if (res.data.success) {
-      setQrImage(res.data.data)
+      setQrImage(res.data.data.qrCode)
+      setStudent(res.data.data.student)
       setQrGenerated(true)
     } else {
       alert(res.data.message)
@@ -149,6 +136,91 @@ const generateQR = async () => {
   }
 }
 
+const generateIdCard = () => {
+
+  if (!selectedTemplate) {
+    alert("Select template first")
+    return
+  }
+
+  if (!qrImage) {
+    alert("Generate QR first")
+    return
+  }
+
+  const validTill = new Date()
+  validTill.setFullYear(validTill.getFullYear() + 1)
+
+  const validTillFormatted = validTill.toLocaleDateString()
+
+  const profile = student || {}
+
+  let html = selectedTemplate.template
+
+  const data = {
+    "{{class}}": `${profile.className || ""} ${profile.sectionId || ""}`,
+    "{{student_name}}": student.name || "",
+    "{{roll_no}}": profile.rollNumber || "",
+    "{{dob}}": profile.dateOfBirth || "",
+    "{{blood_group}}": profile.bloodGroup || "",
+    "{{photo_url}}": student.photo || "https://via.placeholder.com/120",
+    "{{admission_no}}": profile.admissionNumber || "",
+    "{{address}}": profile.currentAddress || "",
+    "{{contact}}": profile.fatherPhone || "",
+    "{{valid_till}}": validTillFormatted,
+    "{{school_name}}": "ABC Public School",
+    "{{school_address}}": "Hingona, Rajasthan",
+    "{{qr_code}}": `<img src="${qrImage}" width="120"/>`,
+  }
+
+  Object.keys(data).forEach((key) => {
+    html = html.replaceAll(key, data[key])
+  })
+
+  const newTab = window.open("", "_blank")
+
+  if (!newTab) return
+
+  newTab.document.write(`
+  <html>
+  <head>
+  <title>ID Card</title>
+
+  <style>
+  body{
+    margin:0;
+    padding:40px;
+    background:#f1f5f9;
+    font-family:Arial;
+    text-align:center;
+  }
+
+  .print-btn{
+    padding:10px 18px;
+    background:#4f46e5;
+    color:white;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+    margin-bottom:20px;
+  }
+
+  </style>
+
+  </head>
+
+  <body>
+
+  <button class="print-btn" onclick="window.print()">Print / Download</button>
+
+  ${html}
+
+  </body>
+  </html>
+  `)
+
+  newTab.document.close()
+}
 
 const fetchRecentScans = async () => {
   try {
@@ -167,9 +239,25 @@ const fetchRecentScans = async () => {
   }
 };
 
+const fetchTemplates = async () => {
+  try {
+    const res = await axiosInstance.get("/api/v1/templates?type=ID_CARD")
+
+    if (res.data.success) {
+      setTemplates(res.data.data)
+    }
+  } catch (err) {
+    console.error("Failed to load templates", err)
+  }
+}
+
 useEffect(() => {
   fetchRecentScans();
 }, []);
+
+useEffect(() => {
+  fetchTemplates()
+}, [])
 
 
   const fetchAttendanceStats = async () => {
@@ -324,15 +412,26 @@ useEffect(() => {
             <div className="space-y-2">
               <Label className="text-sm font-medium">Select Template</Label>
 
-              <Select onValueChange={setTemplate}>
+              <Select
+                onValueChange={(value) => {
+                  setSelectedTemplateId(value)
+                  const t = templates.find((tmp) => tmp.id === value)
+                  setSelectedTemplate(t)
+                }}
+              >
+
                 <SelectTrigger className="border-indigo-200 focus:ring-indigo-400">
                   <SelectValue placeholder="Choose Template" />
                 </SelectTrigger>
 
                 <SelectContent>
-                  <SelectItem value="classic">Classic</SelectItem>
-                  <SelectItem value="modern">Modern</SelectItem>
+                  {templates.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
+
               </Select>
             </div>
 
@@ -406,6 +505,18 @@ useEffect(() => {
                   </div>
                 )}
 
+                {generatedCard && (
+                  <div className="mt-6 flex justify-center">
+
+                    <div
+                      className="border shadow-lg rounded-xl bg-white p-4"
+                      dangerouslySetInnerHTML={{ __html: generatedCard }}
+                    />
+
+                  </div>
+                )}
+
+
                 </div>
 
                 {qrGenerated && (
@@ -416,15 +527,12 @@ useEffect(() => {
                       Save
                     </Button>
 
-                    <Button size="sm" variant="outline" onClick={copyQR}>
-                      <Copy className="w-3 h-3 mr-1" />
-                      Copy
+                  <div className="text-end">
+                    <Button className="gradient-hero text-primary-foreground shadow-lg" onClick={generateIdCard} >
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      {loadingQR ? "Generating Id Card..." : "Generate Id Card"}
                     </Button>
-
-                    <Button size="sm" variant="outline" onClick={fullscreenQR}>
-                      <Monitor className="w-3 h-3 mr-1" />
-                      Fullscreen
-                    </Button>
+                  </div>
 
                   </div>
                 )}

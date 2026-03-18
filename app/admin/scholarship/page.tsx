@@ -43,9 +43,6 @@ import {
   Clock,
   XCircle,
   PauseCircle,
-  Upload,
-  RefreshCw,
-  FileText,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { AdminLayout } from "@/components/layout/AdminLayout";
@@ -141,12 +138,12 @@ export default function page() {
           <TabsTrigger value="applications" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm">
             Applications
           </TabsTrigger>
-          <TabsTrigger value="documents" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm">
+          {/* <TabsTrigger value="documents" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm">
             Documents
           </TabsTrigger>
           <TabsTrigger value="renewal" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm">
             Duration & Renewal
-          </TabsTrigger>
+          </TabsTrigger> */}
         </TabsList>
 
         {/* Scholarship Types Tab */}
@@ -416,7 +413,7 @@ export default function page() {
         </TabsContent>
 
         {/* Documents Tab */}
-        <TabsContent value="documents" className="space-y-4">
+        {/* <TabsContent value="documents" className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">Document Upload & Verification</h3>
           </div>
@@ -471,10 +468,10 @@ export default function page() {
               </div>
             </div>
           </div>
-        </TabsContent>
+        </TabsContent> */}
 
         {/* Duration & Renewal Tab */}
-        <TabsContent value="renewal" className="space-y-4">
+        {/* <TabsContent value="renewal" className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">Duration & Renewal</h3>
             <Button className="gap-2"><RefreshCw size={16} /> Process Renewals</Button>
@@ -519,7 +516,7 @@ export default function page() {
               </TableBody>
             </Table>
           </div>
-        </TabsContent>
+        </TabsContent> */}
       </Tabs>
     </AdminLayout>
   );

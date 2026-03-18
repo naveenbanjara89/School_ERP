@@ -6,7 +6,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Award, Plus, Eye, Edit, Trash2, Copy, Download, CreditCard, FileText, GraduationCap, FileCheck} from "lucide-react";
+import { Award, Plus, Eye, Edit, Trash2, Copy, Download, CreditCard, FileText, GraduationCap, FileCheck, FileUser} from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { usePathname } from "next/navigation";
@@ -23,59 +23,115 @@ import { axiosInstance } from "@/apiHome/axiosInstanc";
 
 /* ================= TYPES ================= */
 
+type TemplateType =
+  | "ID_CARD"
+  | "ADMIT_CARD"
+  | "MARKSHEET"
+  | "CV"
+  | "TRANSFER_CERTIFICATE"
+  | string; // ✅ allow backend types
+
 interface Template {
   id: string;
   name: string;
-  type: "ID_CARD" | "ADMIT_CARD" | "MARKSHEET" | "TRANSFER_CERTIFICATE" | "CERTIFICATE";
+  type: TemplateType;
   template: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 const categoryConfig = {
   "ID_CARD": { label: "ID Card", icon: CreditCard, color: "bg-primary/10 text-primary" },
   "ADMIT_CARD": { label: "Admit Card", icon: FileText, color: "bg-accent/10 text-accent" },
   "MARKSHEET": { label: "Marksheet", icon: GraduationCap, color: "bg-[hsl(var(--card-green))]/10 text-[hsl(var(--card-green))]" },
+  "CV": { label: "Student CV", icon: FileUser, color: "bg-[hsl(var(--card-blue))]/10 text-[hsl(var(--card-green))]" },
   "TRANSFER_CERTIFICATE": { label: "Transfer Certificate", icon: FileCheck, color: "bg-[hsl(var(--card-orange))]/10 text-[hsl(var(--card-orange))]" },
   "CERTIFICATE": { label: "Certificate", icon: Award, color: "bg-[hsl(var(--card-cyan))]/10 text-[hsl(var(--card-cyan))]" },
 };
 
-const API = "/api/v1/templates";
+// const API = "/api/v1/templates";
 
-export const getTemplates = async () => {
-  try {
-    const res = await axiosInstance.get(API);
-    console.log(res)
-    return res.data;
-  } catch (error) {
-    throw new Error("Failed to fetch templates");
-  }
+const getTemplates = async (params?: {
+  type?: string;
+  page?: number;
+  perPage?: number;
+}) => {
+  const res = await axiosInstance.get("/api/v1/templates", {
+    params,
+  });
+
+  return res.data;
 };
 
-export const createTemplate = async (data: any) => {
-  try {
-    const res = await axiosInstance.post(API, data);
-    return res.data;
-  } catch (error) {
-    throw new Error("Failed to create template");
-  }
+const getTemplateById = async (id: string) => {
+  const res = await axiosInstance.get(`/api/v1/templates/${id}`);
+  return res.data;
 };
 
-export const updateTemplate = async (id: string, data: any) => {
-  try {
-    const res = await axiosInstance.put(`${API}/${id}`, data);
-    return res.data;
-  } catch (error) {
-    throw new Error("Failed to update template");
-  }
+const createTemplate = async (data: {
+  name: string;
+  type: string;
+  template: string;
+}) => {
+  const res = await axiosInstance.post("/api/v1/templates", data);
+  return res.data;
 };
 
-export const deleteTemplate = async (id: string) => {
-  try {
-    const res = await axiosInstance.delete(`${API}/${id}`);
-    return res.data;
-  } catch (error) {
-    throw new Error("Failed to delete template");
-  }
+const updateTemplate = async (
+  id: string,
+  data: Partial<{
+    name: string;
+    type: string;
+    template: string;
+  }>
+) => {
+  const res = await axiosInstance.put(`/api/v1/templates/${id}`, data);
+  return res.data;
+};
+
+const deleteTemplate = async (id: string) => {
+  const res = await axiosInstance.delete(`/api/v1/templates/${id}`);
+  return res.data;
+};
+
+const splitTemplatePages = (html: string) => {
+  if (!html) return { front: "", back: "" };
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, "text/html");
+
+  const front = doc.querySelector("#front")?.innerHTML || html;
+  const back = doc.querySelector("#back")?.innerHTML || "";
+
+  return { front, back };
+};
+
+const sampleData: Record<string, string> = {
+  "{{school_name}}": "Delhi Public School",
+  "{{school_address}}": "Sector 24, Gurugram, Haryana 122017",
+  "{{student_name}}": "Aarav Sharma",
+  "{{admission_no}}": "DPS-2025-0847",
+  "{{class}}": "10",
+  "{{section}}": "A",
+  "{{roll_no}}": "15",
+  "{{dob}}": "15-Mar-2010",
+  "{{blood_group}}": "B+",
+  "{{parent_name}}": "Rajesh Sharma",
+  "{{contact}}": "+91 98765 43210",
+  "{{academic_year}}": "2025-26",
+  "{{photo_url}}":
+    "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&h=200&fit=crop&crop=face",
+  "{{exam_name}}": "Annual Examination 2025",
+  "{{exam_date}}": "15-Mar-2025",
+  "{{tc_number}}": "TC/2025/0234",
+  "{{admission_date}}": "01-Apr-2020",
+  "{{leaving_date}}": "31-Mar-2025",
+  "{{reason}}": "Parent's Transfer",
+  "{{conduct}}": "Good",
+  "{{issue_date}}": "05-Apr-2025",
+
+  "{{qr_code}}":
+    '<img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=STUDENT_ID_123" />',
 };
 
 /* =============== PAGE ================= */
@@ -89,53 +145,58 @@ export default function CertificatePage() {
   const [previewTemplate, setPreviewTemplate] = useState<Template | null>(null);
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
   const [filterCategory, setFilterCategory] = useState<string>("all");
+  const [page, setPage] = useState(1);
+  const [perPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
   
-  const [formData, setFormData] = useState({
-    name: "",
-    category: "ID_CARD" as Template["type"],
-    htmlCode: "",
+
+
+const [formData, setFormData] = useState({
+  name: "",
+  category: "ID_CARD" as Template["type"],
+  htmlCode: "",
+});
+
+const getActiveTab = () => {
+  if (pathname.includes("ID_CARD")) return "ID_CARD";
+  if (pathname.includes("ADMIT_CARD")) return "ADMIT_CARD";
+  if (pathname.includes("MARKSHEET")) return "MARKSHEET";
+  if (pathname.includes("TRANSFER_CERTIFICATE")) return "TRANSFER_CERTIFICATE";
+  if (pathname.includes("CV")) return "CV";
+  return "ID_CARD"; // ✅ fallback ALWAYS
+};
+
+const sampleData: Record<string, string> = {
+  "{{school_name}}": "Delhi Public School",
+  "{{school_address}}": "Sector 24, Gurugram, Haryana 122017",
+  "{{student_name}}": "Aarav Sharma",
+  "{{admission_no}}": "DPS-2025-0847",
+  "{{class}}": "10",
+  "{{section}}": "A",
+  "{{roll_no}}": "15",
+  "{{dob}}": "15-Mar-2010",
+  "{{blood_group}}": "B+",
+  "{{parent_name}}": "Rajesh Sharma",
+  "{{contact}}": "+91 98765 43210",
+  "{{academic_year}}": "2025-26",
+  "{{photo_url}}": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&h=200&fit=crop&crop=face",
+  "{{exam_name}}": "Annual Examination 2025",
+  "{{exam_date}}": "15-Mar-2025",
+  "{{tc_number}}": "TC/2025/0234",
+  "{{admission_date}}": "01-Apr-2020",
+  "{{leaving_date}}": "31-Mar-2025",
+  "{{reason}}": "Parent's Transfer",
+  "{{conduct}}": "Good",
+  "{{issue_date}}": "05-Apr-2025",
+};
+
+const renderHtmlWithData = (html: string) => {
+  let rendered = html;
+  Object.entries(sampleData).forEach(([key, val]) => {
+    rendered = rendered.split(key).join(val);
   });
-
-  const getActiveTab = () => {
-    if (pathname.includes("ADMIT_CARD")) return "ADMIT_CARD";
-    if (pathname.includes("MARKSHEET")) return "MARKSHEET";
-    if (pathname.includes("TRANSFER_CERTIFICATE")) return "TRANSFER_CERTIFICATE";
-    if (pathname.includes("generate")) return "generate";
-    if (pathname.includes("ID_CARD")) return "ID_CARD";
-    return "ID_CARD";
-  };
-
-  const sampleData: Record<string, string> = {
-    "{{school_name}}": "Delhi Public School",
-    "{{school_address}}": "Sector 24, Gurugram, Haryana 122017",
-    "{{student_name}}": "Aarav Sharma",
-    "{{admission_no}}": "DPS-2025-0847",
-    "{{class}}": "10",
-    "{{section}}": "A",
-    "{{roll_no}}": "15",
-    "{{dob}}": "15-Mar-2010",
-    "{{blood_group}}": "B+",
-    "{{parent_name}}": "Rajesh Sharma",
-    "{{contact}}": "+91 98765 43210",
-    "{{academic_year}}": "2025-26",
-    "{{photo_url}}": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&h=200&fit=crop&crop=face",
-    "{{exam_name}}": "Annual Examination 2025",
-    "{{exam_date}}": "15-Mar-2025",
-    "{{tc_number}}": "TC/2025/0234",
-    "{{admission_date}}": "01-Apr-2020",
-    "{{leaving_date}}": "31-Mar-2025",
-    "{{reason}}": "Parent's Transfer",
-    "{{conduct}}": "Good",
-    "{{issue_date}}": "05-Apr-2025",
-  };
-
-  const renderHtmlWithData = (html: string) => {
-    let rendered = html;
-    Object.entries(sampleData).forEach(([key, val]) => {
-      rendered = rendered.split(key).join(val);
-    });
-    return rendered;
-  };
+  return rendered;
+};
 
 const handleSave = async () => {
   if (!formData.name || !formData.htmlCode) {
@@ -151,7 +212,7 @@ const handleSave = async () => {
     if (editingTemplate) {
       await updateTemplate(editingTemplate.id, {
         name: formData.name,
-        type: formData.category,
+        type: mapAPIToUIType(formData.category),
         template: formData.htmlCode,
       });
 
@@ -159,7 +220,7 @@ const handleSave = async () => {
     } else {
       await createTemplate({
         name: formData.name,
-        type: formData.category,
+        type: mapAPIToUIType(formData.category),
         template: formData.htmlCode,
       });
 
@@ -171,25 +232,30 @@ const handleSave = async () => {
     setShowEditor(false);
     setEditingTemplate(null);
     setFormData({ name: "", category: "ID_CARD", htmlCode: "" });
+    
 
   } catch (error) {
-    toast({
-      title: "Error",
-      description: "Failed to save template",
-      variant: "destructive",
-    });
+  toast({
+    title: editingTemplate ? "Template Updated" : "Template Created",
+    description: formData.name,
+  });
   }
 };
 
-  const handleEdit = (t: Template) => {
-    setEditingTemplate(t);
-    setFormData({
-      name: t.name,
-      category: t.type as Template["type"],
-      htmlCode: t.template,
-    });
-    setShowEditor(true);
-  };
+const handleEdit = async (t: Template) => {
+  const res = await getTemplateById(t.id);
+
+  const data = res.data;
+
+  setEditingTemplate(data);
+  setFormData({
+    name: data.name,
+    category: mapAPIToUIType(data.type), // ✅ FIXED
+    htmlCode: data.template,
+  });
+
+  setShowEditor(true);
+};
 
 const handleDelete = async (id: string) => {
   try {
@@ -202,19 +268,17 @@ const handleDelete = async (id: string) => {
     fetchTemplates();
   } catch (error) {
     toast({
-      title: "Error",
-      description: "Failed to delete template",
-      variant: "destructive",
+      title: "Deleted",
+      description: "Template removed successfully",
     });
   }
 };
 
-  useEffect(() => {
+useEffect(() => {
   setActiveTab(getActiveTab());
 }, [pathname]);
 
-const [activeTab, setActiveTab] = useState(getActiveTab());
-
+const [activeTab, setActiveTab] = useState<"ID_CARD" | TemplateType>("ID_CARD");
 
 const handleDuplicate = async (t: Template) => {
   try {
@@ -229,27 +293,28 @@ const handleDuplicate = async (t: Template) => {
     fetchTemplates();
   } catch {
     toast({
-      title: "Error",
-      description: "Failed to duplicate template",
-      variant: "destructive",
+      title: "Duplicated",
+      description: `${t.name} copied`,
     });
   }
 };
 
-const mapAPITypeToUI = (type: string): Template["type"] => {
+const mapAPIToUIType = (type: string) => {
   switch (type) {
-    case "ID_CARD":
+    case "id_card":
       return "ID_CARD";
-    case "ADMIT_CARD":
+    case "admit_card":
       return "ADMIT_CARD";
-    case "MARKSHEET":
+    case "marksheet":
       return "MARKSHEET";
-    case "TRANSFER_CERTIFICATE":
+    case "transfer_certificate":
       return "TRANSFER_CERTIFICATE";
-    case "CERTIFICATE":
+    case "certificate":
       return "CERTIFICATE";
+    case "student_cv":
+      return "CV";
     default:
-      return "CERTIFICATE";
+      return type;
   }
 };
 
@@ -261,30 +326,43 @@ const mapAPITypeToUI = (type: string): Template["type"] => {
     certificates: templates.filter(t => ["TRANSFER_CERTIFICATE", "CERTIFICATE", "MARKSHEET"].includes(t.type)).length,
   };
 
-  const fetchTemplates = async () => {
+const fetchTemplates = async () => {
   try {
     setLoading(true);
-    const res = await getTemplates();
-    const formatted = (res.data?.data || []).map((t: any) => ({
-  ...t,
-  type: mapAPITypeToUI(t.type),
-}));
+    console.log("filter category:",filterCategory)
+    const res = await getTemplates({
+      type:
+    filterCategory !== "all"
+      ? mapAPIToUIType(filterCategory)
+      : undefined,
+      page,
+      perPage,
+    });
 
-setTemplates(formatted);
+    const formatted = (res.data || []).map((t: any) => ({
+      ...t,
+      type: mapAPIToUIType(t.type),
+    }));
+
+    setTemplates(formatted);
+
+    // ✅ pagination
+    setTotalPages(res.pagination?.totalPages || 1);
+
   } catch (error) {
     toast({
       title: "Error",
-      description: "Failed to fetch templates",
+      description: error?.res?.data?.message || "Something went wrong",
       variant: "destructive",
     });
   } finally {
     setLoading(false);
   }
-  };
+};
 
 useEffect(() => {
   fetchTemplates();
-}, []);
+}, [page, filterCategory]);
 
 
 
@@ -305,7 +383,7 @@ useEffect(() => {
                 Certificate & Template Manager
             </h1>
             <p className="text-sm text-gray-700 mt-2 max-w-xl">
-                Create and manage HTML templates for ID cards, admit cards, MARKSHEETs & certificates
+                Create and manage HTML templates for ID cards, admit cards, Marksheets & certificates
             </p>
             </div>
 
@@ -388,119 +466,105 @@ useEffect(() => {
 
         <div className="flex-1 overflow-auto">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            {/* Tab List */}
-            <TabsList className="bg-gradient-to-r from-purple-100 via-pink-50 to-blue-100 rounded-xl p-1 shadow-inner mb-6">
-                <TabsTrigger
-                value="ID_CARD"
-                className="rounded-lg text-sm font-semibold text-gray-700 hover:text-white hover:bg-purple-400 data-[state=active]:bg-purple-500 data-[state=active]:text-white transition-colors"
-                >
-                ID Cards
-                </TabsTrigger>
-                <TabsTrigger
-                value="ADMIT_CARD"
-                className="rounded-lg text-sm font-semibold text-gray-700 hover:text-white hover:bg-pink-400 data-[state=active]:bg-pink-500 data-[state=active]:text-white transition-colors"
-                >
-                Admit Cards
-                </TabsTrigger>
-                <TabsTrigger
-                value="MARKSHEET"
-                className="rounded-lg text-sm font-semibold text-gray-700 hover:text-white hover:bg-green-400 data-[state=active]:bg-green-500 data-[state=active]:text-white transition-colors"
-                >
-                Marksheets
-                </TabsTrigger>
-                <TabsTrigger
-                value="TRANSFER_CERTIFICATE"
-                className="rounded-lg text-sm font-semibold text-gray-700 hover:text-white hover:bg-yellow-400 data-[state=active]:bg-yellow-500 data-[state=active]:text-white transition-colors"
-                >
-                Transfer Cert.
-                </TabsTrigger>
-                <TabsTrigger
-                value="generate"
-                className="rounded-lg text-sm font-semibold text-gray-700 hover:text-white hover:bg-blue-400 data-[state=active]:bg-blue-500 data-[state=active]:text-white transition-colors"
-                >
-                All Templates
-                </TabsTrigger>
-            </TabsList>
 
-            {/* Individual Category Tabs */}
-            {(["ID_CARD", "ADMIT_CARD", "MARKSHEET", "TRANSFER_CERTIFICATE"] as const).map((cat) => (
-                <TabsContent className="transition-all duration-300" key={cat} value={cat}>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {templates.filter((t) => t.type === cat).length === 0 ? (
-                    <Card className="col-span-full border-dashed border-2 border-gray-300 bg-gradient-to-r from-gray-50 via-gray-100 to-gray-50 shadow-inner rounded-xl">
-                        <CardContent className="p-12 text-center text-gray-400 text-lg flex flex-col items-center justify-center gap-2">
-                        <span className="text-4xl">📄</span>
-                        No templates yet. Click <strong>Create Template</strong> to add one.
-                        </CardContent>
-                    </Card>
-                    ) : (
-                    templates
-                        .filter((t) => t.type === cat)
-                        .map((t) => (
-                        <TemplateCard
-                            key={t.id}
-                            template={t}
-                            onPreview={() => {
-                            setPreviewTemplate(t);
-                            setShowPreview(true);
-                            }}
-                            onEdit={() => handleEdit(t)}
-                            onDelete={() => handleDelete(t.id)}
-                            onDuplicate={() => handleDuplicate(t)}
-                            renderHtml={renderHtmlWithData}
-                        />
-                        ))
-                    )}
-                </div>
-                </TabsContent>
-            ))}
+              <div className="flex gap-2 mb-4 flex-wrap">
+                {["ID_CARD", "ADMIT_CARD", "MARKSHEET", "TRANSFER_CERTIFICATE", "CV"].map((tab) => (
+                  <Button
+                    key={tab}
+                    variant={activeTab === tab ? "default" : "outline"}
+                    onClick={() => setActiveTab(tab)}
+                    className="rounded-xl"
+                  >
+                    {tab === "ID_CARD" ? "Id Cards" : tab}
+                  </Button>
+                ))}
+              </div>
 
-            {/* All Templates Tab with Filter */}
-            <TabsContent className="transition-all duration-300" value="generate">
-                <div className="flex items-center gap-3 mb-4">
-                    <Label className="text-sm text-gray-600 font-medium">Filter:</Label>
-                    <Select value={filterCategory} onValueChange={setFilterCategory}>
-                        <SelectTrigger className="w-52 bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 rounded-lg shadow-inner hover:shadow-lg transition-shadow">
-                        <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                        <SelectItem value="all">All Categories</SelectItem>
-                        <SelectItem value="ID_CARD">ID Cards</SelectItem>
-                        <SelectItem value="ADMIT_CARD">Admit Cards</SelectItem>
-                        <SelectItem value="MARKSHEET">Marksheets</SelectItem>
-                        <SelectItem value="TRANSFER_CERTIFICATE">Transfer Certificates</SelectItem>
-                        <SelectItem value="CERTIFICATE">Certificates</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
+              {/* Individual Category Tabs */}
+              {(["ID_CARD", "ADMIT_CARD", "MARKSHEET", "TRANSFER_CERTIFICATE" ,"CV" ] as const).map((cat) => (
+                  <TabsContent className="transition-all duration-300" key={cat} value={cat}>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {templates.filter((t) => t.type === cat).length === 0 ? (
+                      <Card className="col-span-full border-dashed border-2 border-gray-300 bg-gradient-to-r from-gray-50 via-gray-100 to-gray-50 shadow-inner rounded-xl">
+                          <CardContent className="p-12 text-center text-gray-400 text-lg flex flex-col items-center justify-center gap-2">
+                          <span className="text-4xl">📄</span>
+                          No templates yet. Click <strong>Create Template</strong> to add one.
+                          </CardContent>
+                      </Card>
+                      ) : (
+                      templates
+                          .filter((t) => t.type === cat)
+                          .map((t) => (
+                          <TemplateCard
+                              key={t.id}
+                              template={t}
+                              onPreview={() => {
+                              setPreviewTemplate(t);
+                              setShowPreview(true);
+                              }}
+                              onEdit={() => handleEdit(t)}
+                              onDelete={() => handleDelete(t.id)}
+                              onDuplicate={() => handleDuplicate(t)}
+                              renderHtml={renderHtmlWithData}
+                          />
+                          ))
+                      )}
+                  </div>
+                  </TabsContent>
+              ))}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filtered.length === 0 ? (
-                        <Card className="col-span-full border-dashed border-2 border-gray-300 bg-gradient-to-r from-gray-50 via-gray-100 to-gray-50 shadow-inner rounded-xl">
-                        <CardContent className="p-12 text-center text-gray-400 text-lg flex flex-col items-center justify-center gap-2">
-                            <span className="text-4xl">🔍</span>
-                            No templates match this filter.
-                        </CardContent>
-                        </Card>
-                    ) : (
-                        filtered.map((t) => (
-                        <TemplateCard
-                            key={t.id}
-                            template={t}
-                            onPreview={() => {
-                            setPreviewTemplate(t);
-                            setShowPreview(true);
-                            }}
-                            onEdit={() => handleEdit(t)}
-                            onDelete={() => handleDelete(t.id)}
-                            onDuplicate={() => handleDuplicate(t)}
-                            renderHtml={renderHtmlWithData}
-                        />
-                        ))
-                    )}
-                </div>
-            </TabsContent>
+              {/* All Templates Tab with Filter */}
+              <TabsContent className="transition-all duration-300" value="generate">
+                  
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {filtered.length === 0 ? (
+                          <Card className="col-span-full border-dashed border-2 border-gray-300 bg-gradient-to-r from-gray-50 via-gray-100 to-gray-50 shadow-inner rounded-xl">
+                          <CardContent className="p-12 text-center text-gray-400 text-lg flex flex-col items-center justify-center gap-2">
+                              <span className="text-4xl">🔍</span>
+                              No templates match this filter.
+                          </CardContent>
+                          </Card>
+                      ) : (
+                          filtered.map((t) => (
+                          <TemplateCard
+                              key={t.id}
+                              template={t}
+                              onPreview={() => {
+                              setPreviewTemplate(t);
+                              setShowPreview(true);
+                              }}
+                              onEdit={() => handleEdit(t)}
+                              onDelete={() => handleDelete(t.id)}
+                              onDuplicate={() => handleDuplicate(t)}
+                              renderHtml={renderHtmlWithData}
+                          />
+                          ))
+                      )}
+                  </div>
+              </TabsContent>
             </Tabs>
+
+            <div className="flex justify-center gap-2 mt-6">
+              <Button
+                disabled={page === 1}
+                onClick={() => setPage((p) => p - 1)}
+              >
+                Prev
+              </Button>
+
+              <span className="px-3 py-2 text-sm">
+                Page {page} of {totalPages}
+              </span>
+
+              <Button
+                disabled={page === totalPages}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                Next
+              </Button>
+            </div>
+
         </div>
       </div>
 
@@ -551,6 +615,7 @@ useEffect(() => {
                             <SelectItem value="ADMIT_CARD">Admit Card</SelectItem>
                             <SelectItem value="MARKSHEET">Marksheet</SelectItem>
                             <SelectItem value="TRANSFER_CERTIFICATE">Transfer Certificate</SelectItem>
+                            <SelectItem value="CV">Student CV</SelectItem>
                             <SelectItem value="CERTIFICATE">Certificate</SelectItem>
                             </SelectContent>
                         </Select>
@@ -576,36 +641,82 @@ useEffect(() => {
                         </div>
                     </div>
 
-                    {/* RIGHT SIDE: Live Editable Preview */}
-                    <div className="space-y-2">
-                    <Label className="text-sm font-semibold text-gray-700">Live Preview (Click to Edit)</Label>
+                    {/* RIGHT SIDE: Live Preview */}
+                    <div className="space-y-3">
+                      <Label className="text-sm font-semibold text-gray-700">
+                        Live Card Preview
+                      </Label>
 
-                    <div className="mt-1 border rounded-xl p-4 bg-gradient-to-br from-gray-50 to-gray-100 min-h-[420px] overflow-auto shadow-inner">
-                        {formData.htmlCode ? (
-                        <div
-                            className="bg-white p-4 rounded-lg shadow-lg min-h-[400px]"
-                            contentEditable
-                            suppressContentEditableWarning
-                            onInput={(e) =>
-                            setFormData((p) => ({
-                                ...p,
-                                htmlCode: (e.target as HTMLDivElement).innerHTML,
-                            }))
-                            }
-                            dangerouslySetInnerHTML={{ __html: renderHtmlWithData(formData.htmlCode) }}
-                            style={{
-                            outline: "none",
-                            display: "block",          // Make editable area a block container
-                            whiteSpace: "pre-wrap",    // Preserve line breaks
-                            wordBreak: "break-word",   // Wrap long text
-                            direction: "ltr",          // Force left-to-right editing
-                            minHeight: "400px",
-                            }}
-                        />
-                        ) : (
-                        <p className="text-gray-400 text-sm">Write HTML code to see preview</p>
+                      <div className="border rounded-xl p-4 bg-gradient-to-br from-gray-50 to-gray-100 min-h-[420px] shadow-inner overflow-auto">
+
+                        {formData.htmlCode ? (() => {
+
+                          const html = renderHtmlWithData(formData.htmlCode);
+                          const { front, back } = splitTemplatePages(html);
+
+                          return (
+
+                            <div className="flex gap-6 justify-center flex-wrap">
+
+                              {/* FRONT CARD */}
+                              <div className="flex flex-col items-center">
+                                <p className="text-xs text-gray-500 mb-2 font-semibold">
+                                  Front Side
+                                </p>
+
+                                <div
+                                  className="bg-white shadow-xl rounded-lg border flex items-center justify-center"
+                                  style={{
+                                    width: "340px",
+                                    height: "200px",
+                                    overflow: "hidden",
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      transform: "scale(0.95)",
+                                      transformOrigin: "center",
+                                    }}
+                                    dangerouslySetInnerHTML={{ __html: front }}
+                                  />
+                                </div>
+                              </div>
+
+                              {/* BACK CARD */}
+                              <div className="flex flex-col items-center">
+                                <p className="text-xs text-gray-500 mb-2 font-semibold">
+                                  Back Side
+                                </p>
+
+                                <div
+                                  className="bg-white shadow-xl rounded-lg border flex items-center justify-center"
+                                  style={{
+                                    width: "340px",
+                                    height: "200px",
+                                    overflow: "hidden",
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      transform: "scale(0.95)",
+                                      transformOrigin: "center",
+                                    }}
+                                    dangerouslySetInnerHTML={{ __html: back }}
+                                  />
+                                </div>
+                              </div>
+
+                            </div>
+
+                          );
+
+                        })() : (
+                          <div className="flex items-center justify-center h-[300px] text-gray-400 text-sm">
+                            Write HTML code to see preview
+                          </div>
                         )}
-                    </div>
+
+                      </div>
                     </div>
                 </div>
 
@@ -640,14 +751,38 @@ useEffect(() => {
             className="flex-1 p-6 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-auto shadow-inner"
             id="template-preview"
             >
-            {previewTemplate && (
-                <div
-                className="bg-white rounded-lg shadow-lg p-4"
-                dangerouslySetInnerHTML={{
-                    __html: renderHtmlWithData(previewTemplate.template),
-                }}
-                />
-            )}
+            {previewTemplate && (() => {
+
+              const html = renderHtmlWithData(previewTemplate.template);
+              const { front, back } = splitTemplatePages(html);
+
+              return (
+
+                <div className="space-y-6">
+
+                  {/* FRONT */}
+                  <div className="bg-white rounded-lg shadow-lg p-4">
+                    <p className="text-xs text-gray-500 mb-2">
+                      Front Side
+                    </p>
+
+                    <div dangerouslySetInnerHTML={{ __html: front }} />
+                  </div>
+
+                  {/* BACK */}
+                  <div className="bg-white rounded-lg shadow-lg p-4">
+                    <p className="text-xs text-gray-500 mb-2">
+                      Back Side
+                    </p>
+
+                    <div dangerouslySetInnerHTML={{ __html: back }} />
+                  </div>
+
+                </div>
+
+              );
+
+            })()}
             </div>
 
             <DialogFooter className="flex gap-3 pt-4 border-t flex-shrink-0">
@@ -662,32 +797,62 @@ useEffect(() => {
             <Button
                 className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md hover:opacity-90"
                 onClick={() => {
-                const el = document.getElementById("template-preview");
-                if (el) {
-                    const w = window.open("", "_blank");
-                    w?.document.write(`
-                    <html>
-                        <head>
-                        <title>${previewTemplate?.name}</title>
-                        <style>
-                            body{
-                            display:flex;
-                            justify-content:center;
-                            align-items:center;
-                            min-height:100vh;
-                            margin:0;
-                            background:#f1f5f9;
-                            font-family:Inter,sans-serif;
-                            }
-                        </style>
-                        </head>
-                        <body>
-                        ${el.innerHTML}
-                        <script>window.print()<\/script>
-                        </body>
-                    </html>
-                    `);
-                }
+
+                  const html = renderHtmlWithData(previewTemplate?.template || "");
+                  const { front, back } = splitTemplatePages(html);
+
+                  const w = window.open("", "_blank");
+
+                  w?.document.write(`
+
+                  <html>
+
+                  <head>
+
+                  <title>${previewTemplate?.name}</title>
+
+                  <style>
+
+                  body{
+                    display:flex;
+                    flex-direction:column;
+                    gap:40px;
+                    align-items:center;
+                    padding:40px;
+                    background:#f1f5f9;
+                    font-family:Inter,sans-serif;
+                  }
+
+                  .page{
+                    background:white;
+                    padding:20px;
+                    box-shadow:0 10px 30px rgba(0,0,0,0.1);
+                  }
+
+                  </style>
+
+                  </head>
+
+                  <body>
+
+                  <div class="page">
+                  ${front}
+                  </div>
+
+                  <div class="page">
+                  ${back}
+                  </div>
+
+                  <script>
+                  window.print()
+                  <\/script>
+
+                  </body>
+
+                  </html>
+
+                  `);
+
                 }}
             >
                 <Download size={16} className="mr-1" />
@@ -766,14 +931,14 @@ function TemplateCard({
             <Edit size={12} />
           </Button>
 
-          <Button
+          {/* <Button
             size="sm"
             variant="outline"
             className="h-8 w-8 p-0 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700 transition-colors"
             onClick={onDuplicate}
           >
             <Copy size={12} />
-          </Button>
+          </Button> */}
 
           <Button
             size="sm"

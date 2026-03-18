@@ -48,40 +48,61 @@ const Page = () => {
   const [editOpen, setEditOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [editData, setEditData] = useState<any>({});
+  const [selectedBranch, setSelectedBranch] = useState("all");
+  const [branchList, setBranchList] = useState<any[]>([]);
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
 
 
 // ================= GET STUDENTS =================
-  const fetchStudents = async () => {
-    setLoading(true);
-    try {
-      const params: any = {
-        page: 1,
-        perPage: 50,
-      };
+const fetchStudents = async () => {
+  setLoading(true);
 
-      if (searchTerm) params.name = searchTerm;
-      if (classFilter !== "all") params.class = classFilter;
+  try {
+    const params: any = {
+      page,
+      perPage,
+    };
 
-      const res = await axiosInstance.get("/api/v1/students", { params });
+    if (searchTerm) params.name = searchTerm;
+    if (classFilter !== "all") params.classId = classFilter;
+    if (selectedBranch !== "all") params.branch = Number(selectedBranch);
 
-      const studentData =
-        res?.data?.data?.students ||
-        res?.data?.data ||
-        res?.data ||
-        [];
+    const res = await axiosInstance.get("/api/v1/students", { params });
 
-      setStudents(Array.isArray(studentData) ? studentData : []);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to load students",
-        variant: "destructive",
-      });
-      setStudents([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const response = res?.data;
+    const data = response?.data;
+
+    console.log("API RESPONSE:", response);
+
+    // ✅ STRICT BACKEND PAGINATION HANDLING (FIXED)
+    const studentsList = data?.students || [];
+    const pagination = data?.pagination || {};
+
+    setStudents(studentsList);
+
+    setTotalPages(pagination.totalPages || 1);
+
+    setPage((prev) =>
+      prev > (pagination.totalPages || 1)
+        ? (pagination.totalPages || 1)
+        : prev
+    );
+
+  } catch (error) {
+    toast({
+      title: "Error",
+      description: "Failed to load students",
+      variant: "destructive",
+    });
+
+    setStudents([]);
+    setTotalPages(1);
+  } finally {
+    setLoading(false);
+  }
+};
 
 
 
@@ -117,65 +138,89 @@ const Page = () => {
     }
   };
 
-  // ================= DELETE STUDENT =================
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this student?")) return;
+// ================= DELETE STUDENT =================
+const handleDelete = async (id: string) => {
+  if (!confirm("Are you sure you want to delete this student?")) return;
 
-    try {
-      await axiosInstance.delete(`/api/v1/students/${id}`);
+  try {
+    await axiosInstance.delete(`/api/v1/students/${id}`);
 
-      toast({
-        title: "Success",
-        description: "Student deleted successfully",
-      });
+    toast({
+      title: "Success",
+      description: "Student deleted successfully",
+    });
 
-      fetchStudents(); // refresh list
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete student",
-        variant: "destructive",
-      });
+    fetchStudents(); // refresh list
+  } catch (error) {
+    toast({
+      title: "Error",
+      description: "Failed to delete student",
+      variant: "destructive",
+    });
+  }
+};  
+
+
+// ================= UPDATE STUDENT =================
+
+const handleUpdate = async () => {
+  try {
+    await axiosInstance.put(
+      `/api/v1/students/${selectedStudent.id}`,
+      editData
+    );
+
+    toast({
+      title: "Success",
+      description: "Student updated successfully",
+    });
+
+    setEditOpen(false);
+    fetchStudents(); // refresh table
+  } catch (error) {
+    toast({
+      title: "Error",
+      description: "Failed to update student",
+      variant: "destructive",
+    });
+  }
+};
+
+const fetchBranches = async () => {
+  try {
+    const res = await axiosInstance.get("/api/v1/branches", {
+      params: { page: 1, perPage: 100 },
+    });
+
+    const branches = res.data.data || []
+    setBranchList(branches);
+
+    // Set default branch if not selected
+    if(branches.length > 0 && !selectedBranch){
+      setSelectedBranch(branches[0].id)
     }
-  };  
 
 
-    // ================= UPDATE STUDENT =================
+  } catch (error) {
+    toast.error("Failed to load branches");
+  }
+};
 
-  const handleUpdate = async () => {
-    try {
-      await axiosInstance.put(
-        `/api/v1/students/${selectedStudent.id}`,
-        editData
-      );
+useEffect(() => {
+  fetchBranches();
+}, []);
 
-      toast({
-        title: "Success",
-        description: "Student updated successfully",
-      });
+useEffect(() => {
+  const delay = setTimeout(() => {
+    fetchStudents();
+  }, 300);
 
-      setEditOpen(false);
-      fetchStudents(); // refresh table
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update student",
-        variant: "destructive",
-      });
-    }
-  };
+  return () => clearTimeout(delay);
+}, [searchTerm, classFilter, selectedBranch, page, perPage]);
 
-  
-
-
-
-  useEffect(() => {
-    const delayDebounce = setTimeout(() => {
-      fetchStudents();
-    }, 500);
-
-    return () => clearTimeout(delayDebounce);
-  }, [searchTerm, classFilter]);
+useEffect(() => {
+  setPage(1);
+}, [searchTerm, classFilter, selectedBranch]);
 
 
   return (
@@ -229,20 +274,75 @@ const Page = () => {
               />
             </div>
 
-            <Select value={classFilter} onValueChange={setClassFilter}>
-              <SelectTrigger className="w-[150px] h-9 text-xs rounded-xl">
-                <Filter className="w-3 h-3 mr-1.5 text-indigo-500" />
-                <SelectValue placeholder="Class" />
+            <Select value={selectedBranch} onValueChange={setSelectedBranch}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Select Branch" />
               </SelectTrigger>
+
               <SelectContent>
-                <SelectItem value="all">All Classes</SelectItem>
-                {["7", "8", "9", "10"].map((c) => (
-                  <SelectItem key={c} value={c}>
-                    Class {c}
+                <SelectItem value="all">All Branch</SelectItem>
+
+                {branchList.map((branch: any) => (
+                  <SelectItem key={branch.id} value={String(branch.id)}>
+                    {branch.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between p-4">
+          
+          {/* LEFT: Rows per page */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm">Rows per page:</span>
+
+            <Select
+              value={String(perPage)}
+              onValueChange={(val) => { setPerPage(Number(val));
+              setPage(1);
+              }}
+            >
+              <SelectTrigger className="w-[80px]">
+                <SelectValue />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem value="5">5</SelectItem>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="25">25</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* RIGHT: Page Controls */}
+          <div className="flex items-center gap-3">
+
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page === 1}
+              onClick={() => setPage((p) => p - 1)}
+            >
+              Previous
+            </Button>
+
+            <span className="text-sm">
+              Page {page} of {totalPages}
+            </span>
+
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page === totalPages}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              Next
+            </Button>
+
           </div>
         </div>
 

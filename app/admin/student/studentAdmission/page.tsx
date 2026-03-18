@@ -7,7 +7,7 @@
 
 
 import { useEffect, useState } from "react";
-import { Save, RotateCcw, UserPlus, Camera, ChevronDown, ChevronUp } from "lucide-react";
+import { Save, RotateCcw, UserPlus, Camera, ChevronDown, ChevronUp, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { axiosInstance } from "@/apiHome/axiosInstanc";
+import { Switch } from "@/components/ui/switch";
 
 const categories = [
   "General", 
@@ -27,6 +28,7 @@ const categories = [
   "EWS", 
   "Other"
 ];
+
 const bloodGroups = [
   "A+", 
   "A-", 
@@ -37,12 +39,14 @@ const bloodGroups = [
   "O+", 
   "O-"
 ];
+
 const houses = [
   "Red House", 
   "Blue House", 
   "Green House", 
   "Yellow House"
 ];
+
 const genders = [
   "Male", 
   "Female", 
@@ -69,17 +73,25 @@ interface StudentForm {
   weight: string;
   currentAddress: string;
   permanentAddress: string;
+  sameAsCurrent: boolean;
   fatherName: string;
   fatherPhone: string;
   motherName: string;
   motherPhone: string;
   parentEmail: string;
   parentPassword: string;
-  guardianName:string;
-  guardianPhone:string;
-  fatherOccupation:string;
-  motherOccupation:string;
-  guardianRelation:string;
+  guardianName: string;
+  guardianPhone: string;
+  fatherOccupation: string;
+  motherOccupation: string;
+  guardianRelation: string;
+
+  // ✅ New Fields (Documents Info)
+  apaarId: string;
+  rteNumber: string;
+  penNumber: string;
+
+  // Fees
   admissionFee: number;
   tutionFee: number;
   transportFee: number;
@@ -110,54 +122,71 @@ const Page = () => {
   const [photo, setPhoto] = useState<File | null>(null);
   const [feeLoading, setFeeLoading] = useState(false);
   const [discountTypes, setDiscountTypes] = useState<any[]>([]);
+  const [documents, setDocuments] = useState({
+    aadhaarFront: null as File | null,
+    aadhaarBack: null as File | null,
+  });
+  const [extraDiscounts, setExtraDiscounts] = useState({
+    sibling: 0,
+    scholarship: 0,
+    sports: 0,
+    staff: 0,
+    manual: 0,
+  });
 
+const [formData, setFormData] = useState<StudentForm>({
+  admissionNumber: "ADM-2027-Amit123",
+  admissionDate: "",
+  branch: "",
+  className: "",
+  sectionId: "",
+  name: "Amit",
+  email: "amit123@gmail.com",
+  rollNumber: "21EAICS170",
+  password: "",
+  gender: "",
+  dateOfBirth: "",
+  category: "",
+  phone: "",
+  bloodGroup: "",
+  house: "",
+  height: "170",
+  weight: "76",
+  currentAddress: "Indore",
+  permanentAddress: "BHopal",
+  sameAsCurrent : false,
+  fatherName: "Aasit",
+  fatherPhone: "9876543210",
+  motherName: "Priya",
+  motherPhone: "9876543210",
+  parentEmail: "aasit123@gmail.com",
+  parentPassword: "",
+  guardianName: "Aasit",
+  guardianPhone: "9876543210",
+  fatherOccupation: "Job",
+  motherOccupation: "Job",
+  guardianRelation: "Father",
 
+  // ✅ New Fields (Documents Info)
+  apaarId: "2001EY234",
+  rteNumber: "20031567",
+  penNumber: "COUPN5145",
 
-  const [formData, setFormData] = useState<StudentForm>({
-    admissionNumber: "",
-    admissionDate: "",
-    branch: "",
-    className: "",
-    sectionId: "",
-    name: "",
-    email: "",
-    rollNumber: "",
-    password: "",
-    gender: "",
-    dateOfBirth: "",
-    category: "",
-    phone: "",
-    bloodGroup: "",
-    house: "",
-    height: "",
-    weight: "",
-    currentAddress: "",
-    permanentAddress: "",
-    fatherName: "",
-    fatherPhone: "",
-    motherName: "",
-    motherPhone: "",
-    parentEmail: "",
-    parentPassword: "",
-    guardianName:"",
-    guardianPhone:"",
-    fatherOccupation:"",
-    motherOccupation:"",
-    guardianRelation:"",
-    admissionFee: 0,
-    tutionFee: 0,
-    transportFee: 0,
-    hostelFee: 0,
-    otherFee: 0,
-    discountType: "",
-    discountValue: "",
-    installments: 1,
-    dueDate: "",
+  // Fees
+  admissionFee: 1000,
+  tutionFee: 50000,
+  transportFee: 5000,
+  hostelFee: 60000,
+  otherFee: 20000,
+  discountType: "",
+  discountValue: "20",
+  installments: 1,
+  dueDate: "",
 });
 
-  useEffect(() => {
-    console.log("Form Data Updated:", formData);
-  }, [formData]);
+useEffect(() => {
+  console.log("Form Data Updated:", formData);
+}, [formData]);
 
 
 const fetchBranches = async () => {
@@ -219,8 +248,14 @@ Number(formData.transportFee || 0) +
 Number(formData.hostelFee || 0) +
 Number(formData.otherFee || 0);
 
-const discountAmount =
-  (totalFees * Number(formData.discountValue || 0)) / 100;
+const totalDiscountPercent =
+  extraDiscounts.sibling +
+  extraDiscounts.scholarship +
+  extraDiscounts.sports +
+  extraDiscounts.staff +
+  extraDiscounts.manual;
+
+const discountAmount = (totalFees * totalDiscountPercent) / 100;
 
 const finalFee = totalFees - discountAmount;
 
@@ -231,48 +266,60 @@ const handleFeeChange = (
 
   setFormData((prev) => ({
     ...prev,
-    [name]: value,
+    [name]:
+      name.includes("Fee") || name === "discountValue"
+        ? Number(value)
+        : value,
   }));
 };
 
-  
-
-  // Fake API check (replace with backend call)
-  const checkParentEmail = async (email: string) => {
+// Fake API check (replace with backend call)
+const checkParentEmail = async (email: string) => {
   setParentEmail(email);
 
   if (!email) return;
 
   try {
-    // Example API call (replace with real API)
     const res = await axiosInstance.get(
       `/api/v1/students/check-parent?email=${email}`
     );
 
     if (res.data.exists) {
-      setSiblingData(res.data.data);
+
+      const data = res.data.data;
+      const childrenCount = data.children.length;
+
+      setSiblingData(data);
+
+      let siblingDiscount = 0;
+
+      if (childrenCount === 1) siblingDiscount = 10;
+      else if (childrenCount === 2) siblingDiscount = 15;
+      else if (childrenCount >= 3) siblingDiscount = 20;
+
+      setExtraDiscounts((prev) => ({
+        ...prev,
+        sibling: siblingDiscount
+      }));
+
+    
 
       toast({
-        title: "👨‍👩‍👧 Sibling Detected",
-        description: `${res.data.data.children.length} children already enrolled. ${res.data.data.discount}% discount applied.`,
+        title: "Sibling Detected",
+        description: `${childrenCount} children enrolled. ${siblingDiscount}% sibling discount applied.`,
       });
+
     } else {
       setSiblingData(null);
+
+      setExtraDiscounts((prev) => ({
+        ...prev,
+        sibling: 0
+      }));
     }
 
   } catch (error: any) {
     setSiblingData(null);
-
-    if (error.response?.status === 404) {
-      // No parent found → not an error
-      return;
-    }
-
-    toast({
-      title: "⚠ Error Checking Parent",
-      description: "Unable to verify parent email.",
-      variant: "destructive",
-    });
   }
 };
 
@@ -291,90 +338,121 @@ const handleChange = (
 
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
-  if (!formData.admissionNumber || !formData.name || !formData.phone) {
-  toast({
-    title: "⚠ Missing Required Fields",
-    description: "Please fill all mandatory fields marked with *",
-    variant: "destructive",
-  });
-  return;
-}
 
-  console.log("Submitting Data:", formData);
-    const payload = {
-      ...formData,
-      fees: {
+  if (!formData.admissionNumber || !formData.name || !formData.phone) {
+    toast({
+      title: "⚠ Missing Required Fields",
+      description: "Please fill all mandatory fields marked with *",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  try {
+    const formDataToSend = new FormData();
+
+    Object.entries(formData).forEach(([key, value]) => {
+      formDataToSend.append(key, String(value));
+    });
+
+    formDataToSend.append(
+      "fees",
+      JSON.stringify({
         admissionFee: Number(formData.admissionFee),
         tutionFee: Number(formData.tutionFee),
         transportFee: Number(formData.transportFee),
         hostelFee: Number(formData.hostelFee),
         otherFee: Number(formData.otherFee),
         discountType: formData.discountType,
-        discountValue: Number(formData.discountValue),
+        discountValue: totalDiscountPercent,
         installments: formData.installments,
         dueDate: formData.dueDate,
         totalFees,
         finalFee,
-      }
-    };
-
-  try {
-    const response = await axiosInstance.post(
-      "/api/v1/students",
-      payload
+      })
     );
 
+    if (photo) {
+      formDataToSend.append("photo", photo);
+    }
+
+    if (documents.aadhaarFront) {
+      formDataToSend.append("aadhaarFront", documents.aadhaarFront);
+    }
+
+    if (documents.aadhaarBack) {
+      formDataToSend.append("aadhaarBack", documents.aadhaarBack);
+    }
+
+    const response = await axiosInstance.post(
+      "/api/v1/students",
+      formDataToSend,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    // ✅ SUCCESS TOAST
     toast({
       title: "✅ Student Saved Successfully",
       description:
         response?.data?.message ||
-        `Student ${formData.name} has been admitted successfully.`,
+        `Student ${formData.name} admitted successfully`,
     });
 
-    // Optional: Reset form after success
+    // ✅ RESET ONLY ON SUCCESS
     handleReset();
 
   } catch (error: any) {
     console.error("Submit Error:", error);
 
-    // 🧠 Backend validation error
-    if (error.response) {
-      const status = error.response.status;
-      const message =
-        error.response?.data?.message || "Server validation failed.";
+    // ❌ DO NOT RESET FORM HERE
 
-      toast({
-        title: `❌ Error ${status}`,
-        description: message,
-        variant: "destructive",
-      });
+    let errorMessage = "Something went wrong";
 
-    } 
-    // 🌐 Network error
-    else if (error.request) {
-      toast({
-        title: "⚠ Network Error",
-        description: "Server is not responding. Please check backend.",
-        variant: "destructive",
-      });
-    } 
-    // ⚡ Unknown error
-    else {
-      toast({
-        title: "❌ Unexpected Error",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
+    // ✅ Handle backend validation errors properly
+    if (error?.response?.data) {
+      const data = error.response.data;
+
+      // Case 1: Duplicate email or custom message
+      if (data.message) {
+        errorMessage = data.message;
+      }
+
+      // Case 2: Validation errors (multiple fields)
+      if (data.errors && typeof data.errors === "object") {
+        const firstErrorKey = Object.keys(data.errors)[0];
+        const firstErrorMsg = data.errors[firstErrorKey][0];
+
+        errorMessage = `${firstErrorKey}: ${firstErrorMsg}`;
+
+        // ✅ Auto focus field (optional enhancement)
+        const field = document.querySelector(
+          `[name="${firstErrorKey}"]`
+        ) as HTMLElement;
+
+        if (field) {
+          field.scrollIntoView({ behavior: "smooth", block: "center" });
+          field.focus();
+        }
+      }
     }
+
+    // ❌ ERROR TOAST
+    toast({
+      title: "❌ Submission Failed",
+      description: errorMessage,
+      variant: "destructive",
+    });
   }
 };
 
 const fetchFeeStructure = async (branchId: string, classId: string) => {
-
   if (!branchId || !classId) return;
 
   try {
-
     setFeeLoading(true);
 
     const res = await axiosInstance.get("/api/v1/fees/structure", {
@@ -394,17 +472,14 @@ const fetchFeeStructure = async (branchId: string, classId: string) => {
       hostelFee: fee.hostelFee || 0,
       otherFee: fee.otherFee || 0,
       dueDate: fee.dueDate || "",
-      lateFinePerDay: fee.lateFinePerDay || "10",
+      // ❌ REMOVED lateFinePerDay (was causing error)
     }));
-
   } catch (error) {
-
     toast({
       title: "Error",
       description: "Failed to load fee structure",
       variant: "destructive",
     });
-
   } finally {
     setFeeLoading(false);
   }
@@ -443,49 +518,63 @@ useEffect(() => {
   fetchDiscounts();
 }, []);
 
-  const handleReset = () => {
-    setFormData({
-      admissionNumber: "",
-      admissionDate: "",
-      branch: "",
-      className: "",
-      sectionId: "",
-      name: "",
-      email: "",
-      rollNumber: "",
-      password: "",
-      gender: "",
-      dateOfBirth: "",
-      category: "",
-      phone: "",
-      bloodGroup: "",
-      house: "",
-      height: "",
-      weight: "",
-      currentAddress: "",
-      permanentAddress: "",
-      fatherName: "",
-      fatherPhone: "",
-      motherName: "",
-      motherPhone: "",
-      parentEmail: "",
-      parentPassword: "",
-      guardianName:"",
-      guardianPhone:"",
-      fatherOccupation:"",
-      motherOccupation:"",
-      guardianRelation:"",
-      admissionFee: 0,
-      tutionFee: 0,
-      transportFee: 0,
-      hostelFee: 0,
-      otherFee: 0,
-      discountType: "",
-      discountValue: "",
-      installments: 1,
-      dueDate: "",
-    });
-  };
+const handleReset = () => {
+  setFormData({
+    admissionNumber: "",
+    admissionDate: "",
+    branch: "",
+    className: "",
+    sectionId: "",
+    name: "",
+    email: "",
+    rollNumber: "",
+    password: "",
+    gender: "",
+    dateOfBirth: "",
+    category: "",
+    phone: "",
+    bloodGroup: "",
+    house: "",
+    height: "",
+    weight: "",
+    currentAddress: "",
+    permanentAddress: "",
+    sameAsCurrent: false,
+    fatherName: "",
+    fatherPhone: "",
+    motherName: "",
+    motherPhone: "",
+    parentEmail: "",
+    parentPassword: "",
+    guardianName: "",
+    guardianPhone: "",
+    fatherOccupation: "",
+    motherOccupation: "",
+    guardianRelation: "",
+
+    apaarId: "",
+    rteNumber: "",
+    penNumber: "",
+
+    admissionFee: 0,
+    tutionFee: 0,
+    transportFee: 0,
+    hostelFee: 0,
+    otherFee: 0,
+    discountType: "",
+    discountValue: "",
+    installments: 1,
+    dueDate: "",
+  });
+
+  // ✅ reset files
+  setPhoto(null);
+  setDocuments({
+    aadhaarFront: null,
+    aadhaarBack: null,
+  });
+  setSiblingData(null);
+};
 
   return (
     <AdminLayout>
@@ -607,11 +696,13 @@ useEffect(() => {
                 <Input placeholder="Full name" value={formData.name}
                  name="name" onChange={(e)=>{handleChange(e)}} className="h-10 text-sm rounded-lg" required />
               </div>
+
               <div className="space-y-2">
                 <Label className="text-xs font-semibold text-muted-foreground">Email *</Label>
                 <Input type="email" placeholder="Email" value={formData.email}
                  name="email" onChange={(e)=>{handleChange(e)}} className="h-10 text-sm rounded-lg" required />
               </div>
+              
               <div className="space-y-2">
                 <Label className="text-xs font-semibold text-muted-foreground">Password *</Label>
                 <Input type="password" value={formData.password}
@@ -738,10 +829,121 @@ useEffect(() => {
                   />
                 </div>
 
-                <div className="w-20 h-20 rounded-2xl bg-muted flex items-center justify-center border-2 border-dashed border-border/60 hover:border-primary transition-colors">
+                {/* <div className="w-20 h-20 rounded-2xl bg-muted flex items-center justify-center border-2 border-dashed border-border/60 hover:border-primary transition-colors">
                   <Camera className="w-6 h-6 text-muted-foreground" />
-                </div>
+                </div> */}
               </div>
+            </CardContent>
+          </Card>
+
+          {/* ================= Documents Upload ================= */}
+          <Card className="border border-border/40 shadow-md rounded-2xl overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-slate-600 to-gray-800 py-4 px-6">
+              <CardTitle className="text-sm font-semibold text-white tracking-wide uppercase">
+                Documents Details & Upload
+              </CardTitle>
+            </CardHeader>
+
+            <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+
+              {/* APAAR ID */}
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold text-muted-foreground">
+                  APAAR ID
+                </Label>
+                <Input
+                  placeholder="Enter APAAR ID"
+                  name="apaarId"
+                  value={formData.apaarId}
+                  onChange={handleChange}
+                  className="h-10 text-sm rounded-lg"
+                />
+              </div>
+
+              {/* RTE Number */}
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold text-muted-foreground">
+                  RTE Number
+                </Label>
+                <Input
+                  placeholder="Enter RTE Number"
+                  name="rteNumber"
+                  value={formData.rteNumber}
+                  onChange={handleChange}
+                  className="h-10 text-sm rounded-lg"
+                />
+              </div>
+
+              {/* PEN Number */}
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold text-muted-foreground">
+                  PEN Number
+                </Label>
+                <Input
+                  placeholder="Enter PEN Number"
+                  name="penNumber"
+                  value={formData.penNumber}
+                  onChange={handleChange}
+                  className="h-10 text-sm rounded-lg"
+                />
+              </div>
+
+              {/* Masked Aadhaar Upload */}
+              <div className="md:col-span-2 lg:col-span-3 flex items-end gap-4">
+                <div className="space-y-2 flex-1">
+                  <Label className="text-xs font-semibold text-muted-foreground">
+                    Upload Masked Aadhaar Card *
+                  </Label>
+                  <Input
+                    type="file"
+                    accept="image/*,.pdf"
+                    onChange={(e) => {
+                      const file = (e.target as HTMLInputElement).files?.[0];
+
+                      if (file) {
+                        setDocuments((prev) => ({
+                          ...prev,
+                          aadhaarFront: file,
+                        }));
+                      }
+                    }}
+                    className="h-10 text-sm rounded-lg"
+                  />
+                </div>
+
+                {/* <button  className="w-20 h-20 cursor pointer rounded-2xl bg-muted flex items-center justify-center border-2 border-dashed border-border/60">
+                  <Upload className="w-6 h-6 text-muted-foreground" />
+                </button> */}
+              </div>
+
+              {/* UnMasked Aadhaar Upload */}
+              <div className="md:col-span-2 lg:col-span-3 flex items-end gap-4">
+                <div className="space-y-2 flex-1">
+                  <Label className="text-xs font-semibold text-muted-foreground">
+                    Upload Back Side of Aadhaar Card *
+                  </Label>
+                  <Input
+                    type="file"
+                    accept="image/*,.pdf"
+                    onChange={(e) => {
+                      const file = (e.target as HTMLInputElement).files?.[0];
+
+                      if (file) {
+                        setDocuments((prev) => ({
+                          ...prev,
+                          aadhaarBack: file,
+                        }));
+                      }
+                    }}
+                    className="h-10 text-sm rounded-lg"
+                  />
+                </div>
+
+                {/* <button className="w-20 h-20 cursor-pointer rounded-2xl bg-muted flex items-center justify-center border-2 border-dashed border-border/60">
+                  <Upload className="w-6 h-6 text-muted-foreground" />
+                </button> */}
+              </div>
+
             </CardContent>
           </Card>
 
@@ -767,6 +969,14 @@ useEffect(() => {
                 />
               </div>
 
+              <div className="flex items-center gap-2">
+                <Switch 
+                checked={formData.sameAsCurrent} 
+                onCheckedChange={v => 
+                setFormData({...formData, sameAsCurrent: v, ...(v ? { permanentAddress: formData.currentAddress} : {})})} />
+                <Label className="text-sm">Permanent address same as current</Label>
+              </div>
+
               <div className="space-y-2">
                 <Label className="text-xs font-semibold text-muted-foreground">
                   Permanent Address
@@ -782,7 +992,7 @@ useEffect(() => {
           </Card>
 
 
-          {/* ================= Parent / Guardian ================= */}
+          {/* ================= Parent / Guardian Details ================= */}
           <Card className="border border-border/40 shadow-md rounded-2xl overflow-hidden">
             <CardHeader className="bg-gradient-to-r from-amber-500 to-orange-600 py-4 px-6">
               <CardTitle className="text-sm font-semibold text-white tracking-wide uppercase">
@@ -917,7 +1127,7 @@ useEffect(() => {
                   </div>
 
                   <Badge className="bg-indigo-600 text-white">
-                    {siblingData.discount}% Discount
+                    {formData.discountValue}% Sibling Discount
                   </Badge>
                 </div>
 
@@ -937,7 +1147,7 @@ useEffect(() => {
 
                 <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
                   <p className="text-sm text-emerald-400 font-medium">
-                    ✔ This student will receive {siblingData.discount}% sibling discount.
+                    ✔ This student will receive {formData.discountValue}% sibling discount.
                   </p>
                 </div>
 
@@ -1026,6 +1236,16 @@ useEffect(() => {
               </div>
 
               <div className="space-y-2">
+                <Label className="text-xs font-semibold text-red-500">
+                  Total Discount (%)
+                </Label>
+                <Input
+                  value={totalDiscountPercent}
+                  readOnly
+                />
+              </div>
+
+              <div className="space-y-2">
                 <Label className="text-xs font-semibold text-green-600">
                   Final Payable Fees
                 </Label>
@@ -1073,13 +1293,16 @@ useEffect(() => {
                     try {
 
                       const res = await axiosInstance.get(`/api/v1/discounts/${value}`);
-
                       const discount = res.data.data;
+
+                      setExtraDiscounts((prev) => ({
+                        ...prev,
+                        scholarship: discount.value
+                      }));
 
                       setFormData((prev) => ({
                         ...prev,
-                        discountType: value,
-                        discountValue: discount.value,
+                        discountType: value
                       }));
 
                     } catch (error) {
@@ -1108,16 +1331,79 @@ useEffect(() => {
                 </Select>
               </div>
 
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <Label className="text-xs">Discount Amount (%)</Label>
                 <Input
                   type="number"
                   name="discountValue"
                   value={formData.discountValue}
-                  onChange={handleFeeChange}
+                  onChange={(e) => {
+                  const value = Number(e.target.value);
+
+                  setExtraDiscounts((prev) => ({
+                    ...prev,
+                    manual: value
+                  }));
+                }}
+                />
+              </div> */}
+
+              {/* <div className="space-y-2">
+                <Label className="text-xs">Scholarship Discount (%)</Label>
+                <Input
+                  type="number"
+                  value={extraDiscounts.scholarship}
+                  onChange={(e) =>
+                    setExtraDiscounts((prev) => ({
+                      ...prev,
+                      scholarship: Number(e.target.value),
+                    }))
+                  }
                 />
               </div>
 
+              <div className="space-y-2">
+                <Label className="text-xs">Sports Discount (%)</Label>
+                <Input
+                  type="number"
+                  value={extraDiscounts.sports}
+                  onChange={(e) =>
+                    setExtraDiscounts((prev) => ({
+                      ...prev,
+                      sports: Number(e.target.value),
+                    }))
+                  }
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs">Staff Discount (%)</Label>
+                <Input
+                  type="number"
+                  value={extraDiscounts.staff}
+                  onChange={(e) =>
+                    setExtraDiscounts((prev) => ({
+                      ...prev,
+                      staff: Number(e.target.value),
+                    }))
+                  }
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs">Manual Discount (%)</Label>
+                <Input
+                  type="number"
+                  value={extraDiscounts.manual}
+                  onChange={(e) =>
+                    setExtraDiscounts((prev) => ({
+                      ...prev,
+                      manual: Number(e.target.value),
+                    }))
+                  }
+                />
+              </div> */}
+              
             </CardContent>
           </Card>
           
