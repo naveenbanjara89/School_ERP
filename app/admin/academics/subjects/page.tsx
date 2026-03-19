@@ -118,6 +118,11 @@ const Subjects = () => {
     if (!searchQuery) getSubjects(pagination.currentPage, pagination.perPage);
   }, [pagination.currentPage, pagination.perPage]);
 
+
+
+
+
+
   /** -----------------------------
    * Handlers
    * ----------------------------- */
@@ -198,10 +203,17 @@ const Subjects = () => {
     setPagination((prev) => ({ ...prev, currentPage: page }));
   };
 
-  const handlePerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const perPage = Number(e.target.value);
-    setPagination((prev) => ({ ...prev, perPage, currentPage: 1 }));
-  };
+  // const handlePerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  //   const perPage = Number(e.target.value);
+  //   setPagination((prev) => ({ ...prev, perPage, currentPage: 1 }));
+  // };
+
+  const handlePerPageChange = (value: string) => {
+  setPagination((prev) => ({
+    ...prev,
+    perPage: Number(value),
+  }));
+};
 
   /** -----------------------------
    * Render
@@ -333,7 +345,10 @@ const Subjects = () => {
           <List className="w-4 h-4 text-indigo-500" />
           <span className="text-sm text-muted-foreground">Per Page</span>
 
-          <Select value={pagination.perPage.toString()} onValueChange={(v) => handlePerPageChange({ target: { value: v } })}>
+          <Select
+            value={pagination.perPage.toString()}
+            onValueChange={handlePerPageChange}
+          >
             <SelectTrigger className="w-[80px] border-none shadow-none focus:ring-0">
               {/* <SelectValue /> */}
             </SelectTrigger>

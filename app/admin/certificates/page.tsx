@@ -20,6 +20,7 @@ import { toast } from "@/hooks/use-toast";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { usePathname } from "next/navigation";
 import { axiosInstance } from "@/apiHome/axiosInstanc";
+import { AxiosError } from "axios";
 
 /* ================= TYPES ================= */
 
@@ -349,13 +350,15 @@ const fetchTemplates = async () => {
     // ✅ pagination
     setTotalPages(res.pagination?.totalPages || 1);
 
-  } catch (error) {
-    toast({
-      title: "Error",
-      description: error?.res?.data?.message || "Something went wrong",
-      variant: "destructive",
-    });
-  } finally {
+  } catch (error: unknown) {
+  const err = error as AxiosError<any>;
+
+  toast({
+    title: "Error",
+    description: err.response?.data?.message || "Something went wrong",
+    variant: "destructive",
+  });
+} finally {
     setLoading(false);
   }
 };

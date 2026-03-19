@@ -10,8 +10,8 @@ import { X, Plus, Trash2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEffect, useState } from "react";
 import { axiosInstance } from "@/apiHome/axiosInstanc";
-import Faq from "../landing/Faq"
-import Footer from "../landing/Footer";
+import Faq from "@/components/landing/Faq";
+import Footer from "@/components/landing/Footer";
 
 
 {/*<---------NavBar---------->*/}
@@ -67,6 +67,7 @@ const AddLinkModal = ({
       {/* modal */}
       <div className="relative bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
         <h2 className="text-lg font-semibold mb-4">Add Navigation Link</h2>
+      
 
         <div className="space-y-3">
           <Input

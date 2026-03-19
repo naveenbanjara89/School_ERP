@@ -33,6 +33,22 @@ import { AdminLayout } from "@/components/layout/AdminLayout";
 import html2canvas from "html2canvas";
 import { axiosInstance } from "@/apiHome/axiosInstanc";
 
+type StudentProfile = {
+  className?: string
+  sectionId?: string
+  rollNumber?: string
+  dateOfBirth?: string
+  bloodGroup?: string
+  admissionNumber?: string
+  currentAddress?: string
+  fatherPhone?: string
+}
+
+type Student = {
+  name?: string
+  photo?: string
+  profile?: StudentProfile
+}
 
 const Page = () => {
   const [qrGenerated, setQrGenerated] = useState(false);
@@ -53,7 +69,7 @@ const Page = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null)
   const [generatedCard, setGeneratedCard] = useState("")
 
-   const [student, setStudent] = useState([])
+  const [student, setStudent] = useState<Student | null>(null)
 
   // **Live Attendance Stats**
   const [stats, setStats] = useState<any[]>([]);
@@ -153,25 +169,25 @@ const generateIdCard = () => {
 
   const validTillFormatted = validTill.toLocaleDateString()
 
-  const profile = student || {}
+  const profile: StudentProfile = student?.profile ?? {}
 
   let html = selectedTemplate.template
 
-  const data = {
-    "{{class}}": `${profile.className || ""} ${profile.sectionId || ""}`,
-    "{{student_name}}": student.name || "",
-    "{{roll_no}}": profile.rollNumber || "",
-    "{{dob}}": profile.dateOfBirth || "",
-    "{{blood_group}}": profile.bloodGroup || "",
-    "{{photo_url}}": student.photo || "https://via.placeholder.com/120",
-    "{{admission_no}}": profile.admissionNumber || "",
-    "{{address}}": profile.currentAddress || "",
-    "{{contact}}": profile.fatherPhone || "",
-    "{{valid_till}}": validTillFormatted,
-    "{{school_name}}": "ABC Public School",
-    "{{school_address}}": "Hingona, Rajasthan",
-    "{{qr_code}}": `<img src="${qrImage}" width="120"/>`,
-  }
+const data: Record<string, string> = {
+  "{{class}}": `${profile?.className || ""} ${profile?.sectionId || ""}`,
+  "{{student_name}}": student?.name || "",
+  "{{roll_no}}": profile?.rollNumber || "",
+  "{{dob}}": profile?.dateOfBirth || "",
+  "{{blood_group}}": profile?.bloodGroup || "",
+  "{{photo_url}}": student?.photo || "https://via.placeholder.com/120",
+  "{{admission_no}}": profile?.admissionNumber || "",
+  "{{address}}": profile?.currentAddress || "",
+  "{{contact}}": profile?.fatherPhone || "",
+  "{{valid_till}}": validTillFormatted,
+  "{{school_name}}": "ABC Public School",
+  "{{school_address}}": "Hingona, Rajasthan",
+  "{{qr_code}}": `<img src="${qrImage}" width="120"/>`,
+}
 
   Object.keys(data).forEach((key) => {
     html = html.replaceAll(key, data[key])

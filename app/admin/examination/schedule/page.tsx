@@ -174,12 +174,16 @@ const fetchClasses = async (branchId: string) => {
   }
 }
 
+useEffect(() => {
+  if (!filterBranch) return;
+
+  fetchClasses(filterBranch);
+}, [filterBranch]);
 
 
 useEffect(() => {
   fetchStats()
   fetchBranches()
-  fetchClasses()
 }, [])
 
 useEffect(() => {
@@ -408,7 +412,7 @@ useEffect(() => {
                 <tr key={s.id} className="border-b border-gray-200 hover:bg-indigo-50 transition-colors">
                   <td className="p-3">{i + 1}</td>
                   <td className="p-3 font-medium">{s.name}</td>
-                  <td className="p-3"><Badge variant="outline">{s.class.name}</Badge></td>
+                  <td className="p-3"><Badge variant="outline">{s.class}</Badge></td>
                   <td className="p-3">{s.subject}</td>
                   <td className="p-3 text-center">{s.code}</td>
                   <td className="p-3">{new Date(s.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</td>
