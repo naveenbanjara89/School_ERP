@@ -3,7 +3,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, Plus, MoreHorizontal, Mail, Phone } from "lucide-react";
+import { Search, Plus, MoreHorizontal, Mail, Phone, GitBranch, BookOpen, Award, Pencil, Trash2, Users, Save, User, ToggleRight, Lock } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -251,278 +251,469 @@ const fetchSubjects = async () => {
   /* ---------------- UI ---------------- */
   return (
     <AdminLayout>
-      {/* Header */}
-      <div className="flex justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-semibold">Teachers</h1>
-          <p className="text-muted-foreground">Manage teaching staff</p>
+      {/* ================= HEADER ================= */}
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-5 mb-6">
+
+        {/* Title */}
+        <div className="flex items-center gap-3">
+          <div className="p-3 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg">
+            <Users className="text-white" size={20} />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              Teachers
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Manage teaching staff
+            </p>
+          </div>
         </div>
-        <Button onClick={() => setIsAddModalOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" />
+
+        {/* Add Button */}
+        <Button
+          onClick={() => setIsAddModalOpen(true)}
+          className="gap-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md hover:opacity-90"
+        >
+          <Plus className="w-4 h-4" />
           Add Teacher
         </Button>
       </div>
 
-      {/* Search */}
-      <div className="relative mb-4">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" />
+      {/* ================= SEARCH ================= */}
+      <div className="relative mb-5">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
         <Input
           placeholder="Search teachers..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10"
+          className="pl-10 focus:ring-2 focus:ring-indigo-400"
         />
       </div>
 
-      {/* Table */}
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Teacher</TableHead>
-            <TableHead>Contact</TableHead>
-            <TableHead>Branch</TableHead>
-            <TableHead>Subject</TableHead>
-            <TableHead>Experience</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Action</TableHead>
-            <TableHead />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {paginatedTeachers.map((t) => (
-            <TableRow key={t.id}>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  <Avatar>
-                    <AvatarFallback>
-                      {t.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
-                    </AvatarFallback>
-                  </Avatar>
-                  {t.name}
-                </div>
-              </TableCell>
-              <TableCell>
-                <Mail className="inline w-4 h-4 mr-1" />
-                {t.email}
-                {t.phone && (
-                  <>
-                    <br />
-                    <Phone className="inline w-4 h-4 mr-1" />
-                    {t.phone}
-                  </>
-                )}
-              </TableCell>
-              <TableCell>{branches.find((b) => String(b.id) === String(t.branchId))?.name || "-"}</TableCell>
-              <TableCell>{subjects.find((s) => String(s.id) === String(t.subjectId))?.name || "-"}</TableCell>
-              <TableCell>{t.experienceYears} yrs</TableCell>
-              <TableCell>{getStatusBadge(t.isActive)}</TableCell>
-              <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button size="icon" variant="ghost">
-                      <MoreHorizontal className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem onClick={() => openEditModal(t)}>Edit</DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="text-destructive"
-                      onClick={() => handleDeleteTeacher(t.id)}
-                    >
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      {/* ================= TABLE ================= */}
+      <div className="rounded-2xl border border-border/40 bg-card shadow-lg overflow-hidden">
 
-      {/* Pagination */}
-      <Pagination className="mt-4">
+        <Table>
+
+          {/* Header */}
+          <TableHeader className="bg-gradient-to-r from-indigo-500/10 to-purple-500/10">
+            <TableRow>
+              <TableHead>Teacher</TableHead>
+              <TableHead>Contact</TableHead>
+              <TableHead>Branch</TableHead>
+              <TableHead>Subject</TableHead>
+              <TableHead>Experience</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-center">Actions</TableHead>
+              <TableHead />
+            </TableRow>
+          </TableHeader>
+
+          {/* Body */}
+          <TableBody>
+            {paginatedTeachers.map((t) => (
+              <TableRow
+                key={t.id}
+                className="hover:bg-muted/50 transition-all duration-200"
+              >
+
+                {/* Teacher */}
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-9 w-9">
+                      <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
+                        {t.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="font-medium">{t.name}</span>
+                  </div>
+                </TableCell>
+
+                {/* Contact */}
+                <TableCell className="text-sm">
+                  <div className="flex items-center gap-1 text-muted-foreground">
+                    <Mail size={14} />
+                    {t.email}
+                  </div>
+                  {t.phone && (
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      <Phone size={14} />
+                      {t.phone}
+                    </div>
+                  )}
+                </TableCell>
+
+                {/* Branch */}
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-md bg-emerald-100 text-emerald-600">
+                      <GitBranch size={14} />
+                    </div>
+                    {branches.find((b) => String(b.id) === String(t.branchId))?.name || "-"}
+                  </div>
+                </TableCell>
+
+                {/* Subject */}
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-md bg-blue-100 text-blue-600">
+                      <BookOpen size={14} />
+                    </div>
+                    {subjects.find((s) => String(s.id) === String(t.subjectId))?.name || "-"}
+                  </div>
+                </TableCell>
+
+                {/* Experience */}
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <Award size={14} className="text-amber-500" />
+                    {t.experienceYears} yrs
+                  </div>
+                </TableCell>
+
+                {/* Status */}
+                <TableCell>
+                  {getStatusBadge(t.isActive)}
+                </TableCell>
+
+                {/* Actions */}
+                <TableCell className="text-center">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button size="icon" variant="ghost" className="rounded-lg hover:bg-muted">
+                        <MoreHorizontal className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+
+                    <DropdownMenuContent
+                      align="end"
+                      className="rounded-xl shadow-xl border border-border/40 p-2"
+                    >
+                      <DropdownMenuItem
+                        onClick={() => openEditModal(t)}
+                        className="gap-2 cursor-pointer"
+                      >
+                        <Pencil className="h-4 w-4 text-indigo-500" />
+                        Edit
+                      </DropdownMenuItem>
+
+                      <DropdownMenuItem
+                        className="gap-2 text-red-500 focus:text-red-500 cursor-pointer"
+                        onClick={() => handleDeleteTeacher(t.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+
+                <TableCell />
+              </TableRow>
+            ))}
+          </TableBody>
+
+        </Table>
+      </div>
+
+      {/* ================= PAGINATION ================= */}
+      <Pagination className="mt-4 flex justify-center gap-1">
         <PaginationContent>
           <PaginationPrevious
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-          />
+            className="bg-indigo-100 text-indigo-600 rounded-lg px-3 py-1 hover:bg-indigo-200"
+          >
+            Prev
+          </PaginationPrevious>
+
           {[...Array(totalPages)].map((_, i) => (
             <PaginationItem key={i}>
               <PaginationLink
                 isActive={currentPage === i + 1}
                 onClick={() => setCurrentPage(i + 1)}
+                className={`px-3 py-1 rounded-lg ${
+                  currentPage === i + 1
+                    ? "bg-indigo-500 text-white shadow"
+                    : "hover:bg-indigo-100"
+                }`}
               >
                 {i + 1}
               </PaginationLink>
             </PaginationItem>
           ))}
+
           <PaginationNext
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-          />
+            className="bg-indigo-100 text-indigo-600 rounded-lg px-3 py-1 hover:bg-indigo-200"
+          >
+            Next
+          </PaginationNext>
         </PaginationContent>
       </Pagination>
 
-      {/* Add Teacher Modal */}
+      {/* ================= ADD TEACHER MODAL ================= */}
       <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add Teacher</DialogTitle>
-            <DialogDescription>Enter teacher details</DialogDescription>
+        <DialogContent className="sm:max-w-[500px] max-h-[600px] overflow-auto rounded-2xl border border-border/40 shadow-xl">
+
+          {/* Header */}
+          <DialogHeader className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-4">
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="w-5 h-5" />
+              Add Teacher
+            </DialogTitle>
+            <DialogDescription className="text-indigo-100">
+              Enter teacher details
+            </DialogDescription>
           </DialogHeader>
 
-          <div className="grid gap-3">
-            <Input
-              placeholder="Name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            />
-            <Input
-              placeholder="Email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            />
-            <Input
-              type="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-            />
-            <Input
-              placeholder="Phone"
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            />
+          {/* Form */}
+          <div className="space-y-4 px-6 py-5">
+            
+            {/* Name */}
+            <div className="relative">
+              <User className="absolute left-3 top-3 text-muted-foreground" size={16} />
+              <Input
+                placeholder="Name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="pl-10 focus:ring-2 focus:ring-indigo-400"
+              />
+            </div>
 
-            <Select
-              value={formData.branchId}
-              onValueChange={(v) => setFormData({ ...formData, branchId: v })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select Branch" />
-              </SelectTrigger>
-              <SelectContent>
-                {branches.map((b) => (
-                  <SelectItem key={b.id} value={b.id.toString()}>
-                    {b.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {/* Email */}
+            <div className="relative">
+              <Mail className="absolute left-3 top-3 text-muted-foreground" size={16} />
+              <Input
+                placeholder="Email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="pl-10 focus:ring-2 focus:ring-indigo-400"
+              />
+            </div>
 
-            <Select
-              value={formData.subjectId}
-              onValueChange={(v) => setFormData({ ...formData, subjectId: v })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select Subject" />
-              </SelectTrigger>
-              <SelectContent>
-                {subjects?.map((s) => (
-                  <SelectItem key={s.id} value={s.id.toString()}>
-                    {s.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {/* Password */}
+            <div className="relative">
+              <Lock className="absolute left-3 top-3 text-muted-foreground" size={16} />
+              <Input
+                type="password"
+                placeholder="Password"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                className="pl-10 focus:ring-2 focus:ring-indigo-400"
+              />
+            </div>
 
-            <Input
-              type="number"
-              placeholder="Experience Years"
-              value={formData.experienceYears}
-              onChange={(e) => setFormData({ ...formData, experienceYears: e.target.value })}
-            />
+            {/* Phone */}
+            <div className="relative">
+              <Phone className="absolute left-3 top-3 text-muted-foreground" size={16} />
+              <Input
+                placeholder="Phone"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                className="pl-10 focus:ring-2 focus:ring-indigo-400"
+              />
+            </div>
+
+            {/* Branch */}
+            <div className="relative">
+              <GitBranch className="absolute left-3 top-3 text-muted-foreground" size={16} />
+              <Select
+                value={formData.branchId}
+                onValueChange={(v) => setFormData({ ...formData, branchId: v })}
+              >
+                <SelectTrigger className="pl-10">
+                  <SelectValue placeholder="Select Branch" />
+                </SelectTrigger>
+                <SelectContent>
+                  {branches.map((b) => (
+                    <SelectItem key={b.id} value={b.id.toString()}>
+                      {b.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Subject */}
+            <div className="relative">
+              <BookOpen className="absolute left-3 top-3 text-muted-foreground" size={16} />
+              <Select
+                value={formData.subjectId}
+                onValueChange={(v) => setFormData({ ...formData, subjectId: v })}
+              >
+                <SelectTrigger className="pl-10">
+                  <SelectValue placeholder="Select Subject" />
+                </SelectTrigger>
+                <SelectContent>
+                  {subjects.map((s) => (
+                    <SelectItem key={s.id} value={s.id.toString()}>
+                      {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Experience */}
+            <div className="relative">
+              <Award className="absolute left-3 top-3 text-amber-500" size={16} />
+              <Input
+                type="number"
+                placeholder="Experience Years"
+                value={formData.experienceYears}
+                onChange={(e) => setFormData({ ...formData, experienceYears: e.target.value })}
+                className="pl-10 focus:ring-2 focus:ring-amber-400"
+              />
+            </div>
+
           </div>
 
-          <DialogFooter>
-            <Button onClick={handleAddTeacher}>Add Teacher</Button>
+          {/* Footer */}
+          <DialogFooter className="px-6 pb-6 flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsAddModalOpen(false)}>Cancel</Button>
+            <Button
+              onClick={handleAddTeacher}
+              className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md hover:opacity-90 flex items-center gap-2"
+            >
+              <Save className="w-4 h-4" />
+              Add Teacher
+            </Button>
           </DialogFooter>
+
         </DialogContent>
       </Dialog>
 
-      {/* Edit Teacher Modal */}
+      {/* ================= EDIT TEACHER MODAL ================= */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Teacher</DialogTitle>
-            <DialogDescription>Edit teacher details</DialogDescription>
+        <DialogContent className="sm:max-w-[500px] max-h-[600px] overflow-auto rounded-2xl border border-border/40 shadow-xl">
+          
+          <DialogHeader className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-4">
+            <DialogTitle className="flex items-center gap-2">
+              <Pencil className="w-5 h-5" />
+              Edit Teacher
+            </DialogTitle>
+            <DialogDescription className="text-indigo-100">
+              Edit teacher details
+            </DialogDescription>
           </DialogHeader>
 
-          <div className="grid gap-3">
-            <Input
-              placeholder="Name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            />
-            <Input
-              placeholder="Email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            />
-            <Input
-              placeholder="Phone"
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            />
+          <div className="space-y-4 px-6 py-5">
 
-            <Select
-              value={formData.branchId}
-              onValueChange={(v) => setFormData({ ...formData, branchId: v })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select Branch" />
-              </SelectTrigger>
-              <SelectContent>
-                {branches.map((b) => (
-                  <SelectItem key={b.id} value={b.id.toString()}>
-                    {b.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {/* Name */}
+            <div className="relative">
+              <User className="absolute left-3 top-3 text-muted-foreground" size={16} />
+              <Input
+                placeholder="Name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="pl-10 focus:ring-2 focus:ring-indigo-400"
+              />
+            </div>
 
-            <Select
-              value={formData.subjectId}
-              onValueChange={(v) => setFormData({ ...formData, subjectId: v })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select Subject" />
-              </SelectTrigger>
-              <SelectContent>
-                {subjects.map((s) => (
-                  <SelectItem key={s.id} value={s.id.toString()}>
-                    {s.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {/* Email */}
+            <div className="relative">
+              <Mail className="absolute left-3 top-3 text-muted-foreground" size={16} />
+              <Input
+                placeholder="Email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="pl-10 focus:ring-2 focus:ring-indigo-400"
+              />
+            </div>
 
-            <Input
-              type="number"
-              placeholder="Experience Years"
-              value={formData.experienceYears}
-              onChange={(e) => setFormData({ ...formData, experienceYears: e.target.value })}
-            />
+            {/* Phone */}
+            <div className="relative">
+              <Phone className="absolute left-3 top-3 text-muted-foreground" size={16} />
+              <Input
+                placeholder="Phone"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                className="pl-10 focus:ring-2 focus:ring-indigo-400"
+              />
+            </div>
 
-            {/* Status selector for edit */}
-            <Select
-              value={formData.status}
-              onValueChange={(v) => setFormData({ ...formData, status: v })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-              </SelectContent>
-            </Select>
+            {/* Branch */}
+            <div className="relative">
+              <GitBranch className="absolute left-3 top-3 text-muted-foreground" size={16} />
+              <Select
+                value={formData.branchId}
+                onValueChange={(v) => setFormData({ ...formData, branchId: v })}
+              >
+                <SelectTrigger className="pl-10">
+                  <SelectValue placeholder="Select Branch" />
+                </SelectTrigger>
+                <SelectContent>
+                  {branches.map((b) => (
+                    <SelectItem key={b.id} value={b.id.toString()}>{b.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Subject */}
+            <div className="relative">
+              <BookOpen className="absolute left-3 top-3 text-muted-foreground" size={16} />
+              <Select
+                value={formData.subjectId}
+                onValueChange={(v) => setFormData({ ...formData, subjectId: v })}
+              >
+                <SelectTrigger className="pl-10">
+                  <SelectValue placeholder="Select Subject" />
+                </SelectTrigger>
+                <SelectContent>
+                  {subjects.map((s) => (
+                    <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Experience */}
+            <div className="relative">
+              <Award className="absolute left-3 top-3 text-amber-500" size={16} />
+              <Input
+                type="number"
+                placeholder="Experience Years"
+                value={formData.experienceYears}
+                onChange={(e) => setFormData({ ...formData, experienceYears: e.target.value })}
+                className="pl-10 focus:ring-2 focus:ring-amber-400"
+              />
+            </div>
+
+            {/* Status */}
+            <div className="relative">
+              <ToggleRight className="absolute left-3 top-3 text-muted-foreground" size={16} />
+              <Select
+                value={formData.status}
+                onValueChange={(v) => setFormData({ ...formData, status: v })}
+              >
+                <SelectTrigger className="pl-10">
+                  <SelectValue placeholder="Select Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
           </div>
 
-          <DialogFooter>
-            <Button onClick={handleEditTeacher}>Update Teacher</Button>
+          {/* Footer */}
+          <DialogFooter className="px-6 pb-6 flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>Cancel</Button>
+            <Button
+              onClick={handleEditTeacher}
+              className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md hover:opacity-90 flex items-center gap-2"
+            >
+              <Save className="w-4 h-4" />
+              Update Teacher
+            </Button>
           </DialogFooter>
+
         </DialogContent>
       </Dialog>
     </AdminLayout>

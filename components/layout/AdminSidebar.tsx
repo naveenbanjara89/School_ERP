@@ -6,8 +6,8 @@
   import { useRouter, usePathname } from "next/navigation";
   import {
     LayoutDashboard, UserPlus, Users, Award, 
-    AlertTriangle, Video, Clock, FileText, Medal, GraduationCap, Calendar,
-     Briefcase, Bell, Download, ClipboardList, Library, Package,
+    AlertTriangle,  Clock, FileText, Medal, GraduationCap, Calendar,
+     Briefcase, Bell, Download,  Library, Package,
      Bus, Building, UtensilsCrossed, Trophy, Globe, 
     BarChart3, Settings, LogOut, PanelLeftClose, PanelLeftOpen,
     ChevronRight,
@@ -40,16 +40,16 @@
     { label: "Student Information", icon: Users, path: "", children: [
       { label: "Student Admission", path: "/admin/student/studentAdmission" },
       { label: "Student Details", path: "/admin/student/studentDetails" },
-      { label: "Disabled Students", path: "/admin/student/disabledStudents" },
+      // { label: "Disabled Students", path: "/admin/student/disabledStudents" },
       // { label: "Bulk Import/Export", path: "/admin/student/bulkImportExport" },
-      { label: "Students Documents", path: "/admin/student/studentDocuments"},
+      // { label: "Students Documents", path: "/admin/student/studentDocuments"},
     ]},
     { label: "Certificate", icon: Medal, path: "/admin/certificates" },
     { label: "Attendance", icon: Clock, path: "", children: [
       { label: "QR Code", path: "/admin/attendance/qr-code" },
       { label: "Face Attendance", path: "/admin/attendance/face" },
       { label: "Biometric", path: "/admin/attendance/biometric" },
-      { label: "Approve Leave", path: "/admin/attendance/approve-leave" },
+      // { label: "Approve Leave", path: "/admin/attendance/approve-leave" },
     ]},
     { label: "Examination", icon: FileText, path: "", children: [
       { label: "Exam", path: "/admin/examination/exam" },
@@ -78,14 +78,14 @@
     { label: "Library", icon: Library, path: "/admin/library" },
     { label: "Inventory", icon: Package, path: "/admin/inventory" },
     { label: "Behaviour Records", icon: AlertTriangle, path: "/admin/behaviour" },
-    { label: "G-Meet Live Classes", icon: Video, path: "/admin/live-classes" },
+    // { label: "G-Meet Live Classes", icon: Video, path: "/admin/live-classes" },
     { label: "Scholarship", icon: Award, path: "/admin/scholarship" },
     // { label: "Lesson Plan", icon: BookMarked, path: "/admin/lesson-plan" },
     { label: "Download Center", icon: Download, path: "/admin/download/uploadContent"},
-    { label: "Homework", icon: ClipboardList, path: "" , children: [
-      { label: "Add Homework", path: "/admin/homework/addHomework" },
-      { label: "Daily Assignment", path: "/admin/homework/dailyAssignment" },
-    ] },
+    // { label: "Homework", icon: ClipboardList, path: "" , children: [
+    //   { label: "Add Homework", path: "/admin/homework/addHomework" },
+    //   { label: "Daily Assignment", path: "/admin/homework/dailyAssignment" },
+    // ] },
 
     { label: "Transport", icon: Bus, path: "/admin/transport" },
     { label: "Hostel", icon: Building, path: "/admin/hostel" },

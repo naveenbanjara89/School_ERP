@@ -1,14 +1,20 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+"use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-// import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import {  BedDouble, Users, Plus, AlertTriangle, DoorOpen } from "lucide-react";
+import {  BedDouble, Users, Plus, AlertTriangle, DoorOpen, Edit, Trash2 } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
+import { useEffect, useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { axiosInstance } from "@/apiHome/axiosInstanc";
 
 const rooms = [
   { id: "R101", block: "A", floor: 1, type: "Double", capacity: 2, occupied: 2, status: "Full" },
@@ -25,196 +31,1213 @@ const residents = [
   { id: 4, name: "Karan Joshi", class: "9-A", room: "R301", block: "C", checkIn: "2025-07-01", due: 1000 },
 ];
 
-const complaints = [
-  { id: 1, student: "Arjun Mehta", room: "R101", issue: "AC not working", date: "2026-02-12", status: "Pending" },
-  { id: 2, student: "Rohan Das", room: "R301", issue: "Water leakage", date: "2026-02-10", status: "Resolved" },
-  { id: 3, student: "Karan Joshi", room: "R301", issue: "Broken window", date: "2026-02-13", status: "In Progress" },
-];
+
 
 const Page = () => {
-  const stats = [
+    const stats = [
     { label: "Total Rooms", value: "120", icon: DoorOpen, gradient: "from-indigo-500 to-blue-500" },
     { label: "Total Residents", value: "285", icon: Users, gradient: "from-emerald-500 to-teal-500" },
     { label: "Available Beds", value: "45", icon: BedDouble, gradient: "from-amber-500 to-orange-500" },
     { label: "Pending Complaints", value: "8", icon: AlertTriangle, gradient: "from-rose-500 to-pink-500" },
-  ];
+    ];
+
+    const { toast } = useToast();
+    const [residentList, setResidentList] = useState(residents);
+
+    const [roomList, setRoomList] = useState<any[]>([]);
+    const [roomLoading, setRoomLoading] = useState(false);
+
+    const [roomPage, setRoomPage] = useState(1);
+    const [roomTotalPages, setRoomTotalPages] = useState(1);
+
+    const [roomFilter, setRoomFilter] = useState("all");
+
+    const [hostels, setHostels] = useState<any[]>([]);
+    const [loading, setLoading] = useState(false);
+
+    const [page, setPage] = useState(1);
+    const [perPage, setPerPage] = useState(10);
+    const [totalPages, setTotalPages] = useState(1);
+
+    const [showHostelModal, setShowHostelModal] = useState(false);
+    const [editMode, setEditMode] = useState(false);
+    const [selectedHostelId, setSelectedHostelId] = useState("");
+
+    const [branchList, setBranchList] = useState<any[]>([]);
+    const [branchLoading, setBranchLoading] = useState(false);
+
+    const [showRoomModal, setShowRoomModal] = useState(false);
+    const [newRoom, setNewRoom] = useState({
+        roomNumber: "",
+        block: "",
+        floor: "",
+        type: "",
+        capacity: "",
+    });
+
+    const [newHostel, setNewHostel] = useState({
+        name: "",
+        phone: "",
+        email: "",
+        address: "",
+        pincode: "",
+        city: "",
+        state: "",
+        branchId: "",
+    });
+
+    const [showAssignModal, setShowAssignModal] = useState(false);
+
+    const [assignData, setAssignData] = useState({
+        studentId: "",
+        roomId: "",
+        checkIn: "",
+    });
+
+    const [editRoomMode, setEditRoomMode] = useState(false);
+    const [selectedRoomId, setSelectedRoomId] = useState("");
+
+const fetchHostels = async () => {
+  setLoading(true);
+
+  try {
+    const res = await axiosInstance.get("/api/v1/hostels", {
+      params: { page, perPage },
+    });
+
+    const data = res.data;
+
+    setHostels(data.data || []);
+    setTotalPages(data.pagination?.totalPages || 1);
+
+  } catch (error) {
+    toast({
+      title: "Error",
+      description: "Failed to load hostels",
+      variant: "destructive",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
+
+const handleEditRoom = (room: any) => {
+  setEditRoomMode(true);
+  setSelectedRoomId(room.id);
+
+  setSelectedHostelId(room.hostelId || "");
+
+  setNewRoom({
+    roomNumber: room.roomNumber || "",
+    block: room.block || "",
+    floor: String(room.floor || ""),
+    type: room.type || "",
+    capacity: String(room.capacity || ""),
+  });
+
+  setShowRoomModal(true);
+};
+
+const handleUpdateRoom = async () => {
+  if (!selectedRoomId) return;
+
+  try {
+    await axiosInstance.put(
+      `/api/v1/hostels/rooms/${selectedRoomId}`,
+      {
+        roomNumber: newRoom.roomNumber,
+        floor: Number(newRoom.floor),
+        block: newRoom.block,
+        hostelId: selectedHostelId,
+        type: newRoom.type,
+        capacity: Number(newRoom.capacity),
+      }
+    );
+
+    toast({
+      title: "Success",
+      description: "Room updated successfully",
+    });
+
+    setShowRoomModal(false);
+    setEditRoomMode(false);
+    setSelectedRoomId("");
+
+    fetchRooms();
+
+  } catch (error: any) {
+    toast({
+      title: "Error",
+      description:
+        error?.response?.data?.message || "Failed to update room",
+      variant: "destructive",
+    });
+  }
+};
+
+const fetchBranches = async () => {
+  setBranchLoading(true);
+
+  try {
+    const res = await axiosInstance.get("/api/v1/branches", {
+      params: { page: 1, perPage: 100 },
+    });
+
+    const branches = res.data.data || [];
+    setBranchList(branches);
+
+  } catch (error) {
+    toast({
+      title: "Error",
+      description: "Failed to load branches",
+      variant: "destructive",
+    });
+  } finally {
+    setBranchLoading(false);
+  }
+};
+
+const handleCreateHostel = async () => {
+  try {
+    await axiosInstance.post("/api/v1/hostels", newHostel);
+
+    toast({
+      title: "Success",
+      description: "Hostel created successfully",
+    });
+
+    setShowHostelModal(false);
+
+    setNewHostel({
+      name: "",
+      phone: "",
+      email: "",
+      address: "",
+      pincode: "",
+      city: "",
+      state: "",
+      branchId: "",
+    });
+
+    fetchHostels();
+
+  } catch (error: any) {
+    toast({
+      title: "Error",
+      description:
+        error?.response?.data?.message || "Failed to create hostel",
+      variant: "destructive",
+    });
+  }
+};
+
+const handleEdit = async (id: string) => {
+  try {
+    const res = await axiosInstance.get(`/api/v1/hostels/${id}`);
+
+    const data = res.data.data;
+
+    setNewHostel({
+      name: data.name || "",
+      phone: data.phone || "",
+      email: data.email || "",
+      address: data.address || "",
+      pincode: data.pincode || "",
+      city: data.city || "",
+      state: data.state || "",
+      branchId: data.branchId ? String(data.branchId) : "", // 🔥 FIX
+    });
+
+    setSelectedHostelId(id);
+    setEditMode(true);
+    setShowHostelModal(true);
+
+  } catch (error) {
+    toast({
+      title: "Error",
+      description: "Failed to fetch hostel",
+      variant: "destructive",
+    });
+  }
+};
+
+const handleDelete = async (id: string) => {
+  if (!confirm("Delete this hostel? This will remove all rooms.")) return;
+
+  try {
+    await axiosInstance.delete(`/api/v1/hostels/${id}`);
+
+    toast({
+      title: "Success",
+      description: "Hostel deleted successfully",
+    });
+
+    fetchHostels();
+
+  } catch (error) {
+    toast({
+      title: "Error",
+      description: "Failed to delete hostel",
+      variant: "destructive",
+    });
+  }
+};
+
+const handleUpdateHostel = async () => {
+  try {
+    await axiosInstance.put(
+      `/api/v1/hostels/${selectedHostelId}`,
+      newHostel
+    );
+
+    toast({
+      title: "Success",
+      description: "Hostel updated successfully",
+    });
+
+    setShowHostelModal(false);
+    setEditMode(false);
+
+    fetchHostels();
+
+  } catch (error: any) {
+    toast({
+      title: "Error",
+      description:
+        error?.response?.data?.message || "Failed to update hostel",
+      variant: "destructive",
+    });
+  }
+};
+
+const fetchRooms = async () => {
+  setRoomLoading(true);
+
+  try {
+    const res = await axiosInstance.get("/api/v1/hostels/rooms", {
+      params: {
+        page: roomPage,
+        perPage: 10,
+      },
+    });
+
+    let rooms = res.data.data || [];
+
+    // 🔥 FILTER LOGIC (frontend)
+    if (roomFilter === "available") {
+      rooms = rooms.filter((r: any) => r.status === "AVAILABLE");
+    } else if (roomFilter === "occupied") {
+      rooms = rooms.filter((r: any) => r.status === "OCCUPIED");
+    }
+
+    setRoomList(rooms);
+    setRoomTotalPages(res.data.pagination?.totalPages || 1);
+
+  } catch (error) {
+    toast({
+      title: "Error",
+      description: "Failed to load rooms",
+      variant: "destructive",
+    });
+  } finally {
+    setRoomLoading(false);
+  }
+};
+
+const handleCreateRoom = async () => {
+  try {
+    await axiosInstance.post("/api/v1/hostels/rooms", {
+      roomNumber: newRoom.roomNumber,
+      floor: Number(newRoom.floor),
+      block: newRoom.block,
+      hostelId: selectedHostelId, // 🔥 REQUIRED
+      type: newRoom.type,
+      capacity: Number(newRoom.capacity),
+    });
+
+    toast({
+      title: "Success",
+      description: "Room created successfully",
+    });
+
+    setShowRoomModal(false);
+
+    setNewRoom({
+      roomNumber: "",
+      block: "",
+      floor: "",
+      type: "",
+      capacity: "",
+    });
+
+    fetchRooms();
+
+  } catch (error: any) {
+    toast({
+      title: "Error",
+      description:
+        error?.response?.data?.message || "Failed to create room",
+      variant: "destructive",
+    });
+  }
+};
+
+const handleDeleteRoom = async (id: string) => {
+  if (!confirm("Delete this room?")) return;
+
+  try {
+    await axiosInstance.delete(`/api/v1/hostels/rooms/${id}`);
+
+    toast({
+      title: "Success",
+      description: "Room deleted successfully",
+    });
+
+    fetchRooms();
+
+  } catch (error) {
+    toast({
+      title: "Error",
+      description: "Failed to delete room",
+      variant: "destructive",
+    });
+  }
+};
+
+useEffect(() => {
+  fetchRooms();
+}, [roomPage, roomFilter]);
+
+
+useEffect(() => {
+  fetchBranches();
+}, []);
+
+useEffect(() => {
+  if (editMode && branchList.length > 0 && newHostel.branchId) {
+    setNewHostel((prev) => ({
+      ...prev,
+      branchId: String(prev.branchId),
+    }));
+  }
+}, [branchList]);
+
+useEffect(() => {
+  fetchHostels();
+}, [page, perPage]);
 
   return (
     <AdminLayout>
         <div className="space-y-6">
-        <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
-            Hostel Management
-            </h1>
-            <p className="text-muted-foreground mt-1">Manage rooms, residents, fees & complaints</p>
-        </div>
+            <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
+                Hostel Management
+                </h1>
+                <p className="text-muted-foreground mt-1">Manage rooms, residents, fees & complaints</p>
+            </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {stats.map((stat) => (
-            <Card key={stat.label} className="relative overflow-hidden border-0 shadow-lg">
-                <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-10`} />
-                <CardContent className="p-4 relative">
-                <div className="flex items-center justify-between">
-                    <div>
-                    <p className="text-sm text-muted-foreground">{stat.label}</p>
-                    <p className="text-2xl font-bold mt-1">{stat.value}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {stats.map((stat) => (
+                <Card key={stat.label} className="relative overflow-hidden border-0 shadow-lg">
+                    <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-10`} />
+                    <CardContent className="p-4 relative">
+                    <div className="flex items-center justify-between">
+                        <div>
+                        <p className="text-sm text-muted-foreground">{stat.label}</p>
+                        <p className="text-2xl font-bold mt-1">{stat.value}</p>
+                        </div>
+                        <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.gradient} text-white`}>
+                        <stat.icon className="h-5 w-5" />
+                        </div>
                     </div>
-                    <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.gradient} text-white`}>
-                    <stat.icon className="h-5 w-5" />
+                    </CardContent>
+                </Card>
+                ))}
+            </div>
+
+            <Tabs defaultValue="hostel" className="space-y-5">
+
+                {/* Tabs */}
+                <TabsList className="bg-muted/40 p-1 rounded-xl">
+                    <TabsTrigger value="hostel" className="flex items-center gap-2">
+                    <DoorOpen className="h-4 w-4" />
+                    Hostel
+                    </TabsTrigger>
+
+                    <TabsTrigger value="rooms" className="flex items-center gap-2">
+                    <BedDouble className="h-4 w-4" />
+                    Rooms
+                    </TabsTrigger>
+
+                    <TabsTrigger value="residents" className="flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Residents
+                    </TabsTrigger>
+                </TabsList>
+
+                {/* Hostel Tab */}
+                <TabsContent value="hostel" className="space-y-5">
+
+                    {/* Top Bar */}
+                    <div className="flex flex-col sm:flex-row gap-3 justify-between items-center">
+
+                    {/* Search */}
+                    <div className="relative w-full sm:max-w-sm">
+                        <Input
+                        placeholder="Search hostel..."
+                        className="pl-10 bg-white shadow-sm"
+                        />
+                        <DoorOpen className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    </div>
+
+                    {/* Add Button */}
+                    <Button
+                        onClick={() => setShowHostelModal(true)}
+                        className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-md hover:scale-[1.02] transition"
+                    >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Hostel
+                    </Button>
+                    </div>
+
+                    {/* Table Card */}
+                    <Card className="border-0 shadow-xl bg-white/80 backdrop-blur">
+                    <Table>
+
+                        <TableHeader>
+                        <TableRow className="bg-muted/40">
+                            <TableHead>Hostel</TableHead>
+                            <TableHead>Phone</TableHead>
+                            <TableHead>City</TableHead>
+                            <TableHead>Address</TableHead>
+                            {/* <TableHead>Status</TableHead> */}
+                            <TableHead className="text-center">Action</TableHead>
+                        </TableRow>
+                        </TableHeader>
+
+                        <TableBody>
+                        {hostels.map((hostel) => (
+                            <TableRow
+                            key={hostel.id}
+                            className="hover:bg-muted/30 transition"
+                            >
+                            {/* Hostel Name with Icon */}
+                            <TableCell>
+                                <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
+                                    <DoorOpen className="h-4 w-4" />
+                                </div>
+                                <span className="font-medium">{hostel.name}</span>
+                                </div>
+                            </TableCell>
+
+                            {/* Phone */}
+                            <TableCell className="font-mono text-sm">
+                                {hostel.phone}
+                            </TableCell>
+
+                            {/* City */}
+                            <TableCell>
+                                <span className="px-2 py-1 rounded-md bg-blue-50 text-blue-600 text-xs">
+                                {hostel.city}
+                                </span>
+                            </TableCell>
+
+                            {/* Address */}
+                            <TableCell className="text-muted-foreground text-sm max-w-[200px] truncate">
+                                {hostel.address}
+                            </TableCell>
+
+                            {/* Status */}
+                            {/* <TableCell>
+                                <Badge
+                                className={
+                                    hostel.status === "Active"
+                                    ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
+                                    : "bg-gray-100 text-gray-700 border"
+                                }
+                                >
+                                {hostel.status}
+                                </Badge>
+                            </TableCell> */}
+
+                            <TableCell className="flex justify-center">
+                            <div className="flex gap-2">
+                                <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleEdit(hostel.id)}
+                                >
+                                <Edit className="h-4 w-4 "/>
+                                </Button>
+
+                                <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleDelete(hostel.id)}
+                                >
+                                <Trash2 className="h-4 w-4 "/>
+                                </Button>
+                            </div>
+                            </TableCell>
+
+                            </TableRow>
+                        ))}
+                        </TableBody>
+
+                    </Table>
+                    </Card>
+                </TabsContent>
+
+                {showHostelModal && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+                    <div className="bg-white rounded-2xl p-6 w-[480px] space-y-5 shadow-2xl border">
+
+                        {/* Header */}
+                        <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-gradient-to-r from-purple-500 to-indigo-500 text-white">
+                            <DoorOpen className="h-5 w-5" />
+                        </div>
+                        <h2 className="text-xl font-semibold">Create Hostel</h2>
+                        </div>
+
+                        {/* Form */}
+                        <div className="space-y-4">
+
+                        {/* Hostel Name */}
+                        <div>
+                            <label className="text-sm text-muted-foreground">Hostel Name</label>
+                            <div className="relative mt-1">
+                            <Input
+                                className="pl-10"
+                                placeholder="Enter hostel name"
+                                value={newHostel.name}
+                                onChange={(e) =>
+                                setNewHostel({ ...newHostel, name: e.target.value })
+                                }
+                            />
+                            <DoorOpen className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            </div>
+                        </div>
+
+                        {/* Phone + Email */}
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                            <label className="text-sm text-muted-foreground">Phone</label>
+                            <Input
+                                placeholder="9876543210"
+                                value={newHostel.phone}
+                                onChange={(e) =>
+                                setNewHostel({ ...newHostel, phone: e.target.value })
+                                }
+                            />
+                            </div>
+
+                            <div>
+                            <label className="text-sm text-muted-foreground">Email</label>
+                            <Input
+                                placeholder="hostel@mail.com"
+                                value={newHostel.email}
+                                onChange={(e) =>
+                                setNewHostel({ ...newHostel, email: e.target.value })
+                                }
+                            />
+                            </div>
+                        </div>
+
+                        {/* Address */}
+                        <div>
+                            <label className="text-sm text-muted-foreground">Address</label>
+                            <Input
+                            placeholder="Full address"
+                            value={newHostel.address}
+                            onChange={(e) =>
+                                setNewHostel({ ...newHostel, address: e.target.value })
+                            }
+                            />
+                        </div>
+
+                        {/* City + State */}
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                            <label className="text-sm text-muted-foreground">City</label>
+                            <Input
+                                placeholder="City"
+                                value={newHostel.city}
+                                onChange={(e) =>
+                                setNewHostel({ ...newHostel, city: e.target.value })
+                                }
+                            />
+                            </div>
+
+                            <div>
+                            <label className="text-sm text-muted-foreground">State</label>
+                            <Input
+                                placeholder="State"
+                                value={newHostel.state}
+                                onChange={(e) =>
+                                setNewHostel({ ...newHostel, state: e.target.value })
+                                }
+                            />
+                            </div>
+                        </div>
+
+                        {/* Pincode + Branch */}
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                            <label className="text-sm text-muted-foreground">Pincode</label>
+                            <Input
+                                placeholder="302001"
+                                value={newHostel.pincode}
+                                onChange={(e) =>
+                                setNewHostel({ ...newHostel, pincode: e.target.value })
+                                }
+                            />
+                            </div>
+
+                            <div>
+                            <label className="text-sm text-muted-foreground">Branch</label>
+
+                            <Select
+                                value={newHostel.branchId || ""}
+                                disabled={editMode}
+                                onValueChange={(value) =>
+                                setNewHostel({ ...newHostel, branchId: value })
+                                }
+                            >
+                                <SelectTrigger>
+                                <SelectValue placeholder="Select Branch" />
+                                </SelectTrigger>
+
+                                <SelectContent>
+                                {branchLoading ? (
+                                    <SelectItem value="loading" disabled>
+                                    Loading...
+                                    </SelectItem>
+                                ) : branchList.length === 0 ? (
+                                    <SelectItem value="empty" disabled>
+                                    No branches found
+                                    </SelectItem>
+                                ) : (
+                                    branchList.map((branch: any) => (
+                                    <SelectItem key={branch.id} value={String(branch.id)}>
+                                        {branch.name}
+                                    </SelectItem>
+                                    ))
+                                )}
+                                </SelectContent>
+                            </Select>
+                            </div>
+                        </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="flex justify-end gap-3 pt-2">
+                        <Button
+                            variant="outline"
+                            onClick={() => setShowHostelModal(false)}
+                        >
+                            Cancel
+                        </Button>
+
+                        <Button
+                        onClick={() => {
+                        if (!newHostel.name || !newHostel.phone || !newHostel.branchId) {
+                            alert("Please fill required fields");
+                            return;
+                        }
+
+                        if (editMode) {
+                            handleUpdateHostel();
+                        } else {
+                            handleCreateHostel();
+                        }
+                        }}
+                        >
+                            <Plus className="h-4 w-4 mr-2" />
+                             {editMode ? "Update Hostel" : "Create Hostel"}
+                        </Button>
+                        </div>
+                    </div>
+                    </div>
+                )}
+
+                <TabsContent value="rooms" className="space-y-5">
+
+                {/* Top Bar */}
+                    <div className="flex flex-col sm:flex-row gap-3 justify-between items-center">
+
+                        {/* Filters */}
+                        <div className="flex gap-2">
+                        <Select value={roomFilter} onValueChange={setRoomFilter}>
+                            <SelectTrigger className="w-36 bg-white shadow-sm">
+                            <SelectValue placeholder="🏢 Rooms" />
+                            </SelectTrigger>
+                            <SelectContent>
+                            <SelectItem value="all">All Rooms</SelectItem>
+                            <SelectItem value="available">Available Room</SelectItem>
+                            <SelectItem value="occupied">Occupied Room</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        </div>
+
+                        {/* Button */}
+                        <Button onClick={() => setShowRoomModal(true)} className="bg-gradient-to-r from-indigo-500 to-blue-500 text-white shadow-md hover:scale-[1.03] transition">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Room
+                        </Button>
+                    </div>
+
+                    {/* Table */}
+                    <Card className="border-0 shadow-xl bg-white/80 backdrop-blur">
+                        <Table>
+
+                        <TableHeader>
+                            <TableRow className="bg-muted/40">
+                            <TableHead>Room</TableHead>
+                            <TableHead>Block</TableHead>
+                            <TableHead>Floor</TableHead>
+                            <TableHead>Type</TableHead>
+                            <TableHead>Capacity</TableHead>
+                            <TableHead>Occupied</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Action</TableHead>
+                            </TableRow>
+                        </TableHeader>
+
+                        <TableBody>
+                            {roomList.map((room) => (
+                            <TableRow key={room.id} className="hover:bg-muted/30 transition">
+
+                                {/* Room */}
+                                <TableCell>
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-lg bg-gradient-to-r from-indigo-500 to-blue-500 text-white">
+                                    <BedDouble className="h-4 w-4" />
+                                    </div>
+                                    <span className="font-mono font-medium">{room.roomNumber}</span>
+                                </div>
+                                </TableCell>
+
+                                {/* Block */}
+                                <TableCell>
+                                <span className="px-2 py-1 rounded-md bg-purple-50 text-purple-600 text-xs">
+                                    Block {room.block}
+                                </span>
+                                </TableCell>
+
+                                {/* Floor */}
+                                <TableCell>
+                                <span className="text-sm text-muted-foreground">
+                                    Floor {room.floor}
+                                </span>
+                                </TableCell>
+
+                                {/* Type */}
+                                <TableCell>
+                                <span className="px-2 py-1 bg-blue-50 text-blue-600 rounded-md text-xs">
+                                    {room.type}
+                                </span>
+                                </TableCell>
+
+                                {/* Capacity */}
+                                <TableCell className="font-semibold">
+                                {room.capacity}
+                                </TableCell>
+
+                                {/* Occupied */}
+                                <TableCell>
+                                <div className="text-sm">
+                                    {room.students}/{room.capacity}
+                                    <div className="w-full h-1.5 bg-gray-200 rounded-full mt-1">
+                                    <div
+                                        className="h-1.5 bg-indigo-500 rounded-full"
+                                        style={{
+                                        width: `${(room.students / room.capacity) * 100}%`,
+                                        }}
+                                    />
+                                    </div>
+                                </div>
+                                </TableCell>
+
+                                {/* Status */}
+                                <TableCell>
+                                    <Badge
+                                    className={
+                                        room.status === "OCCUPIED"
+                                        ? "bg-rose-100 text-rose-700 border"
+                                        : "bg-emerald-100 text-emerald-700 border"
+                                    }
+                                    >
+                                    {room.status}
+                                    </Badge>
+                                </TableCell>
+
+                                <TableCell>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleEditRoom(room)}
+                                >
+                                    <Edit className="h-4 w-4" />
+                                </Button>
+
+                                <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={() => handleDeleteRoom(room.id)}
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                                </TableCell>
+
+                            </TableRow>
+                            ))}
+                        </TableBody>
+
+                        </Table>
+                    </Card>
+                </TabsContent>
+
+                {showRoomModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+                    <div className="bg-white rounded-2xl p-6 w-[480px] space-y-5 shadow-2xl border">
+
+                    {/* Header */}
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-gradient-to-r from-indigo-500 to-blue-500 text-white">
+                        <BedDouble className="h-5 w-5" />
+                        </div>
+                        <h2  className="text-xl font-semibold">Add Room</h2>
+                    </div>
+
+                    {/* Form */}
+                    <div className="space-y-4">
+
+                        <div>
+                            <label className="text-sm text-muted-foreground">Hostel</label>
+
+                            <Select
+                                value={selectedHostelId}
+                                onValueChange={(value) => setSelectedHostelId(value)}
+                            >
+                                <SelectTrigger>
+                                <SelectValue placeholder="Select Hostel" />
+                                </SelectTrigger>
+
+                                <SelectContent>
+                                {hostels.map((h: any) => (
+                                    <SelectItem key={h.id} value={h.id}>
+                                    {h.name}
+                                    </SelectItem>
+                                ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {/* Room Number */}
+                        <div>
+                            <label className="text-sm text-muted-foreground">Room Number</label>
+                            <Input
+                                placeholder="R101"
+                                value={newRoom.roomNumber}
+                                onChange={(e) =>
+                                setNewRoom({ ...newRoom, roomNumber: e.target.value })
+                                }
+                            />
+                        </div>
+
+                        {/* Block + Floor */}
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="text-sm text-muted-foreground">Block</label>
+                                <Input placeholder="A"
+                                value={newRoom.block} 
+                                onChange={(e)=>
+                                setNewRoom({...newRoom,block:e.target.value})
+                                }
+                                />
+                            </div>
+
+                            <div>
+                                <label className="text-sm text-muted-foreground">Floor</label>
+                                <Input placeholder="1st Flor"
+                                value={newRoom.floor} 
+                                onChange={(e)=>
+                                setNewRoom({...newRoom,floor:e.target.value})
+                                }
+                                />
+                            </div>
+                        </div>
+
+                        {/* Type + Capacity */}
+                        <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <label className="text-sm text-muted-foreground">Room Type</label>
+                            <Input placeholder="AC"
+                            value={newRoom.type} 
+                            onChange={(e)=>
+                            setNewRoom({...newRoom,type:e.target.value})
+                            }
+                            />
+                        </div>
+
+                        <div>
+                            <label className="text-sm text-muted-foreground">Capacity</label>
+                            <Input
+                            type="number"
+                            placeholder="2"
+                            value={newRoom.capacity}
+                            onChange={(e) =>
+                                setNewRoom({ ...newRoom, capacity: e.target.value })
+                            }
+                            />
+                        </div>
+                        </div>
+
+                    </div>
+
+                    {/* Footer */}
+                    <div className="flex justify-end gap-3 pt-2">
+                        <Button
+                        variant="outline"
+                        onClick={() => setShowRoomModal(false)}
+                        >
+                        Cancel
+                        </Button>
+
+                        <Button
+                             onClick={editRoomMode ? handleUpdateRoom : handleCreateRoom}
+                            className="bg-indigo-600 text-white"
+                            >
+                            {editRoomMode ? "Update Room" : "Create Room"}
+                        </Button>
+                    </div>
+
                     </div>
                 </div>
-                </CardContent>
-            </Card>
-            ))}
-        </div>
+                )}
 
-        <Tabs defaultValue="rooms" className="space-y-4">
-            <TabsList className="bg-muted/50 p-1">
-            <TabsTrigger value="rooms">Rooms</TabsTrigger>
-            <TabsTrigger value="residents">Residents</TabsTrigger>
-            <TabsTrigger value="fees">Hostel Fees</TabsTrigger>
-            <TabsTrigger value="complaints">Complaints</TabsTrigger>
-            </TabsList>
 
-            <TabsContent value="rooms" className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-3 justify-between">
-                <div className="flex gap-2">
-                <Select><SelectTrigger className="w-32"><SelectValue placeholder="Block" /></SelectTrigger>
-                    <SelectContent><SelectItem value="A">Block A</SelectItem><SelectItem value="B">Block B</SelectItem><SelectItem value="C">Block C</SelectItem></SelectContent>
-                </Select>
-                <Select><SelectTrigger className="w-32"><SelectValue placeholder="Floor" /></SelectTrigger>
-                    <SelectContent><SelectItem value="1">Floor 1</SelectItem><SelectItem value="2">Floor 2</SelectItem><SelectItem value="3">Floor 3</SelectItem></SelectContent>
-                </Select>
-                </div>
-                <Button className="bg-gradient-to-r from-indigo-500 to-blue-500 text-white"><Plus className="h-4 w-4 mr-2" /> Add Room</Button>
-            </div>
-            <Card>
-                <Table>
-                <TableHeader>
-                    <TableRow>
-                    <TableHead>Room No</TableHead>
-                    <TableHead>Block</TableHead>
-                    <TableHead>Floor</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Capacity</TableHead>
-                    <TableHead>Occupied</TableHead>
-                    <TableHead>Status</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {rooms.map((room) => (
-                    <TableRow key={room.id}>
-                        <TableCell className="font-mono font-medium">{room.id}</TableCell>
-                        <TableCell>Block {room.block}</TableCell>
-                        <TableCell>{room.floor}</TableCell>
-                        <TableCell>{room.type}</TableCell>
-                        <TableCell>{room.capacity}</TableCell>
-                        <TableCell>{room.occupied}/{room.capacity}</TableCell>
-                        <TableCell>
-                        <Badge className={room.status === "Full" ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-700"}>{room.status}</Badge>
-                        </TableCell>
-                    </TableRow>
-                    ))}
-                </TableBody>
-                </Table>
-            </Card>
-            </TabsContent>
+                <TabsContent value="residents" className="space-y-5">
 
-            <TabsContent value="residents" className="space-y-4">
-            <div className="flex justify-between">
-                <Input placeholder="Search residents..." className="max-w-sm" />
-                <Button className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white"><Plus className="h-4 w-4 mr-2" /> Assign Room</Button>
-            </div>
-            <Card>
-                <Table>
-                <TableHeader>
-                    <TableRow>
-                    <TableHead>Student Name</TableHead>
-                    <TableHead>Class</TableHead>
-                    <TableHead>Room</TableHead>
-                    <TableHead>Block</TableHead>
-                    <TableHead>Check-In</TableHead>
-                    <TableHead>Dues</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {residents.map((r) => (
-                    <TableRow key={r.id}>
-                        <TableCell className="font-medium">{r.name}</TableCell>
-                        <TableCell>{r.class}</TableCell>
-                        <TableCell className="font-mono">{r.room}</TableCell>
-                        <TableCell>Block {r.block}</TableCell>
-                        <TableCell>{r.checkIn}</TableCell>
-                        <TableCell className={r.due > 0 ? "text-rose-600 font-semibold" : "text-emerald-600"}>
-                        {r.due > 0 ? `₹${r.due}` : "Paid"}
-                        </TableCell>
-                    </TableRow>
-                    ))}
-                </TableBody>
-                </Table>
-            </Card>
-            </TabsContent>
+                {/* Top Bar */}
+                <div className="flex flex-col sm:flex-row justify-between gap-3 items-center">
 
-            <TabsContent value="fees" className="space-y-4">
-            <Card>
-                <CardHeader><CardTitle>Hostel Fee Structure</CardTitle></CardHeader>
-                <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {[
-                    { type: "Single Room", monthly: 5000, annual: 55000, color: "from-indigo-500 to-blue-500" },
-                    { type: "Double Room", monthly: 3500, annual: 38000, color: "from-emerald-500 to-teal-500" },
-                    { type: "Dormitory", monthly: 2000, annual: 22000, color: "from-amber-500 to-orange-500" },
-                    ].map((fee) => (
-                    <div key={fee.type} className={`p-5 rounded-xl bg-gradient-to-br ${fee.color} text-white`}>
-                        <h3 className="font-semibold text-lg">{fee.type}</h3>
-                        <p className="text-3xl font-bold mt-2">₹{fee.monthly.toLocaleString()}<span className="text-sm font-normal opacity-80">/month</span></p>
-                        <p className="text-sm opacity-80 mt-1">Annual: ₹{fee.annual.toLocaleString()}</p>
+                    {/* Search */}
+                    <div className="relative w-full sm:max-w-sm">
+                    <Input
+                        placeholder="Search residents..."
+                        className="pl-10 bg-white shadow-sm"
+                    />
+                    <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     </div>
-                    ))}
-                </div>
-                </CardContent>
-            </Card>
-            </TabsContent>
 
-            <TabsContent value="complaints" className="space-y-4">
-            <div className="flex justify-between">
-                <Input placeholder="Search complaints..." className="max-w-sm" />
-                <Button className="bg-gradient-to-r from-rose-500 to-pink-500 text-white"><Plus className="h-4 w-4 mr-2" /> New Complaint</Button>
-            </div>
-            <Card>
-                <Table>
-                <TableHeader>
-                    <TableRow>
-                    <TableHead>Student</TableHead>
-                    <TableHead>Room</TableHead>
-                    <TableHead>Issue</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {complaints.map((c) => (
-                    <TableRow key={c.id}>
-                        <TableCell className="font-medium">{c.student}</TableCell>
-                        <TableCell className="font-mono">{c.room}</TableCell>
-                        <TableCell>{c.issue}</TableCell>
-                        <TableCell>{c.date}</TableCell>
-                        <TableCell>
-                        <Badge className={
-                            c.status === "Resolved" ? "bg-emerald-100 text-emerald-700" :
-                            c.status === "In Progress" ? "bg-blue-100 text-blue-700" :
-                            "bg-amber-100 text-amber-700"
-                        }>{c.status}</Badge>
-                        </TableCell>
-                        <TableCell><Button variant="ghost" size="sm">Update</Button></TableCell>
-                    </TableRow>
-                    ))}
-                </TableBody>
-                </Table>
-            </Card>
-            </TabsContent>
-        </Tabs>
+                    {/* Button */}
+                    <Button onClick={() => setShowAssignModal(true)} className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md hover:scale-[1.03] transition">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Assign Room
+                    </Button>
+                </div>
+
+                {/* Table */}
+                <Card className="border-0 shadow-xl bg-white/80 backdrop-blur">
+                    <Table>
+
+                    <TableHeader>
+                        <TableRow className="bg-muted/40">
+                        <TableHead>Student</TableHead>
+                        <TableHead>Class</TableHead>
+                        <TableHead>Room</TableHead>
+                        <TableHead>Block</TableHead>
+                        <TableHead>Check-In</TableHead>
+                        <TableHead>Dues</TableHead>
+                        </TableRow>
+                    </TableHeader>
+
+                    <TableBody>
+                        {residents.map((r) => (
+                        <TableRow key={r.id} className="hover:bg-muted/30 transition">
+
+                            {/* Name */}
+                            <TableCell>
+                            <div className="flex items-center gap-3">
+                                <div className="h-8 w-8 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white flex items-center justify-center text-sm font-bold">
+                                {r.name.charAt(0)}
+                                </div>
+                                <span className="font-medium">{r.name}</span>
+                            </div>
+                            </TableCell>
+
+                            {/* Class */}
+                            <TableCell>
+                            <span className="px-2 py-1 bg-blue-50 text-blue-600 rounded-md text-xs">
+                                {r.class}
+                            </span>
+                            </TableCell>
+
+                            {/* Room */}
+                            <TableCell className="font-mono">
+                            {r.room}
+                            </TableCell>
+
+                            {/* Block */}
+                            <TableCell>
+                            <span className="text-muted-foreground">
+                                Block {r.block}
+                            </span>
+                            </TableCell>
+
+                            {/* Date */}
+                            <TableCell className="text-sm">
+                            {r.checkIn}
+                            </TableCell>
+
+                            {/* Dues */}
+                            <TableCell>
+                            {r.due > 0 ? (
+                                <span className="px-2 py-1 bg-rose-100 text-rose-600 rounded-md text-xs font-semibold">
+                                ₹{r.due}
+                                </span>
+                            ) : (
+                                <span className="px-2 py-1 bg-emerald-100 text-emerald-600 rounded-md text-xs font-semibold">
+                                Paid
+                                </span>
+                            )}
+                            </TableCell>
+
+                        </TableRow>
+                        ))}
+                    </TableBody>
+
+                    </Table>
+                </Card>
+                </TabsContent>
+
+                {showAssignModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+                    <div className="bg-white rounded-2xl p-6 w-[480px] space-y-5 shadow-2xl border">
+
+                    {/* Header */}
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 text-white">
+                        <Users className="h-5 w-5" />
+                        </div>
+                        <h2 className="text-xl font-semibold">Assign Room</h2>
+                    </div>
+
+                    {/* Form */}
+                    <div className="space-y-4">
+
+                        {/* Student Select */}
+                        <div>
+                        <label className="text-sm text-muted-foreground">Student</label>
+                        <Select
+                            value={assignData.studentId}
+                            onValueChange={(value) =>
+                            setAssignData({ ...assignData, studentId: value })
+                            }
+                        >
+                            <SelectTrigger>
+                            <SelectValue placeholder="Select Student" />
+                            </SelectTrigger>
+
+                            <SelectContent>
+                            {residentList.map((r) => (
+                                <SelectItem key={r.id} value={String(r.id)}>
+                                {r.name}
+                                </SelectItem>
+                            ))}
+                            </SelectContent>
+                        </Select>
+                        </div>
+
+                        {/* Room Select */}
+                        <div>
+                        <label className="text-sm text-muted-foreground">Room</label>
+                        <Select
+                            value={assignData.roomId}
+                            onValueChange={(value) =>
+                            setAssignData({ ...assignData, roomId: value })
+                            }
+                        >
+                            <SelectTrigger>
+                            <SelectValue placeholder="Select Room" />
+                            </SelectTrigger>
+
+                            <SelectContent>
+                            {roomList.map((room) => (
+                                <SelectItem key={room.id} value={room.id}>
+                                {room.id} ({room.type})
+                                </SelectItem>
+                            ))}
+                            </SelectContent>
+                        </Select>
+                        </div>
+
+                        {/* Check-in */}
+                        <div>
+                        <label className="text-sm text-muted-foreground">Check-In Date</label>
+                        <Input
+                            type="date"
+                            value={assignData.checkIn}
+                            onChange={(e) =>
+                            setAssignData({ ...assignData, checkIn: e.target.value })
+                            }
+                        />
+                        </div>
+
+                    </div>
+
+                    {/* Footer */}
+                    <div className="flex justify-end gap-3 pt-2">
+                        <Button
+                        variant="outline"
+                        onClick={() => setShowAssignModal(false)}
+                        >
+                        Cancel
+                        </Button>
+
+                        <Button
+                        onClick={() => {
+                            if (
+                            !assignData.studentId ||
+                            !assignData.roomId ||
+                            !assignData.checkIn
+                            ) {
+                            alert("Please fill all fields");
+                            return;
+                            }
+
+                            // 🔥 TEMP: update local residents
+                            const selectedStudent = residents.find(
+                            (s) => String(s.id) === assignData.studentId
+                            );
+
+                            if (!selectedStudent) return;
+
+                            selectedStudent.room = assignData.roomId;
+                            selectedStudent.checkIn = assignData.checkIn;
+
+                            setShowAssignModal(false);
+
+                            setAssignData({
+                            studentId: "",
+                            roomId: "",
+                            checkIn: "",
+                            });
+                        }}
+                        className="bg-emerald-600 text-white"
+                        >
+                        Assign
+                        </Button>
+                    </div>
+
+                    </div>
+                </div>
+                )}
+
+            </Tabs>
         </div>
     </AdminLayout>
   );

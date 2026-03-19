@@ -53,6 +53,9 @@ const Page = () => {
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importLoading, setImportLoading] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
 
 
 // ================= GET STUDENTS =================
@@ -206,6 +209,101 @@ const fetchBranches = async () => {
   }
 };
 
+const handleImport = async (file: File) => {
+  setImportLoading(true);
+
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await axiosInstance.post(
+      "/api/v1/students/import",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    const data = res.data?.data;
+
+    toast({
+      title: "Import Completed",
+      description: `✅ Success: ${data?.successCount || 0}, ❌ Failed: ${
+        data?.failedCount || 0
+      }`,
+    });
+
+    // 🔁 Refresh student list
+    fetchStudents();
+
+    // Optional: log failed rows
+    if (data?.failed?.length > 0) {
+      console.log("Failed Rows:", data.failed);
+    }
+  } catch (error: any) {
+    toast({
+      title: "Import Failed",
+      description:
+        error?.response?.data?.message || "Something went wrong",
+      variant: "destructive",
+    });
+  } finally {
+    setImportLoading(false);
+    setImportFile(null);
+  }
+};
+
+const handleExport = async () => {
+  try {
+    const params: any = {};
+
+    // ✅ Apply same filters as table (important)
+    if (searchTerm) params.name = searchTerm;
+    if (classFilter !== "all") params.classId = classFilter;
+    if (selectedBranch !== "all") params.branch = Number(selectedBranch);
+
+    const res = await axiosInstance.get(
+      "/api/v1/students/export",
+      {
+        params,
+        responseType: "blob", // 🔥 important for file download
+      }
+    );
+
+    // ✅ Create file download
+    const blob = new Blob([res.data], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    const url = window.URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+
+    // Dynamic filename
+    link.setAttribute(
+      "download",
+      `students_${new Date().toISOString().slice(0, 10)}.xlsx`
+    );
+
+    document.body.appendChild(link);
+    link.click();
+
+    link.remove();
+    window.URL.revokeObjectURL(url);
+
+  } catch (error: any) {
+    toast({
+      title: "Export Failed",
+      description:
+        error?.response?.data?.message || "Unable to export data",
+      variant: "destructive",
+    });
+  }
+};
+
 useEffect(() => {
   fetchBranches();
 }, []);
@@ -238,14 +336,21 @@ useEffect(() => {
           </div>
 
           <div className="flex gap-3">
-            <Button variant="outline" size="sm">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={importLoading}
+              onClick={() => {
+                document.getElementById("student-import-file")?.click();
+              }}
+            >
               <Upload className="w-4 h-4 mr-1.5" />
-              Import
+              {importLoading ? "Importing..." : "Import"}
             </Button>
 
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={handleExport} disabled={exportLoading}>
               <Download className="w-4 h-4 mr-1.5" />
-              Export
+              {exportLoading ? "Exporting..." : "Export"}
             </Button>
 
             <Button
@@ -260,6 +365,19 @@ useEffect(() => {
             </Button>
           </div>
         </div>
+
+        <input
+          type="file"
+          accept=".xlsx, .xls"
+          style={{ display: "none" }}
+          id="student-import-file"
+          onChange={(e) => {
+            if (e.target.files && e.target.files[0]) {
+              setImportFile(e.target.files[0]);
+              handleImport(e.target.files[0]); // auto upload after select
+            }
+          }}
+        />
 
         {/* ================= FILTERS ================= */}
         <div className="rounded-2xl border border-slate-200 shadow-sm bg-white p-4">
