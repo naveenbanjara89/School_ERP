@@ -205,7 +205,11 @@ const fetchBranches = async () => {
 
 
   } catch (error) {
-    toast.error("Failed to load branches");
+    toast({
+    title: "Error",
+    description: "Failed to load branches",
+    variant: "destructive",
+  });
   }
 };
 
